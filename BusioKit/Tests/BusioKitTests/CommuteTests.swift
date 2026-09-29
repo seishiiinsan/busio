@@ -14,6 +14,22 @@ final class CommuteTests: XCTestCase {
         XCTAssertFalse(s.isWorkday(TestData.date(2026, 9, 27, 8)))
     }
 
+    func testEveningRecommendationLeavesAfterWork() async throws {
+        let cache = FileManager.default.temporaryDirectory.appendingPathComponent("busio-evening-\(UUID().uuidString)")
+        let service = TransitService(configuration: .init(
+            cacheDirectory: cache, seedDirectory: TestData.seed,
+            client: ZenbusClient(baseURL: URL(string: "http://127.0.0.1:9")!),
+            gtfsURL: URL(string: "http://127.0.0.1:9/g.zip")!
+        ))
+        let now = TestData.date(2026, 9, 29, 16, 0)
+        let snapshot = try await service.commuteSnapshot(settings: settings(), direction: .toHome, now: now)
+        XCTAssertEqual(snapshot.originName, "Gares Mazamet")
+        let recommended = try XCTUnwrap(snapshot.journeys.first { $0.id == snapshot.recommendedID })
+        // Sortie 16:30 + 5 min de marche jusqu'à l'arrêt.
+        XCTAssertGreaterThanOrEqual(recommended.departureTime, TestData.date(2026, 9, 29, 16, 35))
+        XCTAssertFalse(snapshot.journeys.contains { $0.departureTime >= TestData.date(2026, 9, 29, 16, 35) && $0.departureTime < recommended.departureTime })
+    }
+
     func testPlaceRefSurvivesRenumbering() {
         let area = TestData.area("gares mazamet")
         let moved = PlaceRef(areaID: "999", name: area.name, coordinate: Coordinate(latitude: area.coordinate.latitude + 0.001, longitude: area.coordinate.longitude))

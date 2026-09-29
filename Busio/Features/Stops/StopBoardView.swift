@@ -96,7 +96,7 @@ private struct StopHeader: View {
             Map(initialPosition: .region(MKCoordinateRegion(center: area.coordinate.clCoordinate, latitudinalMeters: 450, longitudinalMeters: 450))) {
                 ForEach(platforms) { stop in
                     Marker(stop.name, systemImage: "bus.fill", coordinate: stop.coordinate.clCoordinate)
-                        .tint(.accentColor)
+                        .tint(Color.accentColor)
                 }
                 UserAnnotation()
             }

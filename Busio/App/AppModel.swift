@@ -7,7 +7,7 @@ import BusioKit
 @Observable
 @MainActor
 final class AppModel {
-    enum Tab: Hashable {
+    enum Tab: String, Hashable {
         case commute, map, lines, search
     }
 
@@ -31,9 +31,26 @@ final class AppModel {
     let service = Transit.service
 
     init() {
-        let preferences = AppGroup.store.loadPreferences()
+        var preferences = AppGroup.store.loadPreferences()
+        #if DEBUG
+        // Captures d'écran automatiques (CI) : `-demo` configure un trajet, `-tab map` ouvre un onglet.
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-demo") {
+            preferences.commute.home = PlaceRef(areaID: "839690006", name: "Gares Castres", coordinate: Coordinate(latitude: 43.5984, longitude: 2.2303))
+            preferences.commute.work = PlaceRef(areaID: "843740007", name: "Gares Mazamet", coordinate: Coordinate(latitude: 43.4982, longitude: 2.3740))
+            preferences.favorites = [PlaceRef(areaID: "836670001", name: "Gare SNCF", coordinate: Coordinate(latitude: 43.6003, longitude: 2.2352))]
+            preferences.hasCompletedOnboarding = true
+            AppGroup.store.save(preferences)
+        }
+        #endif
         self.preferences = preferences
         showOnboarding = !preferences.hasCompletedOnboarding
+        #if DEBUG
+        if let index = arguments.firstIndex(of: "-tab"), arguments.indices.contains(index + 1),
+           let tab = Tab(rawValue: arguments[index + 1]) {
+            selectedTab = tab
+        }
+        #endif
     }
 
     func start() async {

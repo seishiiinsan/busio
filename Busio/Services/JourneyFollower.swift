@@ -49,6 +49,9 @@ final class JourneyFollower {
         followed = stored
         if refreshTask == nil {
             refreshTask = Task { [weak self] in await self?.refreshLoop() }
+        } else {
+            // Retour dans l'app : pas d'attente jusqu'à la prochaine actualisation espacée.
+            Task { [weak self] in await self?.refreshNow() }
         }
         // Le suivi GPS en arrière-plan ne peut démarrer qu'app ouverte.
         if locationAuthorized, locationTask == nil, let network {
@@ -77,9 +80,17 @@ final class JourneyFollower {
         while !Task.isCancelled {
             await refreshNow()
             guard followed != nil else { break }
-            try? await Task.sleep(for: .seconds(45))
+            try? await Task.sleep(for: refreshInterval)
         }
         refreshTask = nil
+    }
+
+    /// Toutes les 45 s à l'approche du départ et pendant le trajet ; espacé quand il est loin (la nuit).
+    private var refreshInterval: Duration {
+        let lead = journey?.departure.timeIntervalSinceNow ?? 0
+        if lead > 2 * 3600 { return .seconds(15 * 60) }
+        if lead > 30 * 60 { return .seconds(3 * 60) }
+        return .seconds(45)
     }
 
     private func stopTasks() {

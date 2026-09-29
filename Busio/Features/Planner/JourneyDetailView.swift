@@ -89,9 +89,13 @@ struct JourneyDetailView: View {
         do {
             try await app.follow(journey, request: result.request, title: model.title)
             if app.location.canAsk { app.location.requestPermission() }
-            activityMessage = JourneyActivityController.isEnabled
-                ? "Compte à rebours sur l'écran verrouillé. Busio te prévient si une correspondance saute et avant ta descente."
-                : "Suivi actif. Active les Live Activities (Réglages › Busio) pour le compte à rebours sur l'écran verrouillé."
+            if !JourneyActivityController.isEnabled {
+                activityMessage = "Suivi actif. Active les Live Activities (Réglages › Busio) pour le compte à rebours sur l'écran verrouillé."
+            } else if journey.departure.timeIntervalSinceNow > 7 * 3600 {
+                activityMessage = "Attention : iOS arrête une Live Activity au bout de 8 h. Pour un trajet de demain matin, relance le suivi au réveil ou utilise l'automatisation « Suivre mon trajet » (Réglages)."
+            } else {
+                activityMessage = "Compte à rebours sur l'écran verrouillé. Busio te prévient si une correspondance saute et avant ta descente."
+            }
             app.showFollowed = true
         } catch {
             activityMessage = error.localizedDescription

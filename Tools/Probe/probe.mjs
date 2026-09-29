@@ -15,7 +15,7 @@ const rtroot = protobuf.parse(readFileSync(new URL('./gtfs-realtime.proto', impo
 const FeedMessage = rtroot.lookupType('transit_realtime.FeedMessage');
 
 const toObj = (T, buf) => T.toObject(T.decode(buf), { longs: String, enums: String, defaults: false, oneofs: true });
-const j = (o, n = 2000) => JSON.stringify(o).slice(0, n);
+const j = (o, n = 2000) => (JSON.stringify(o) ?? String(o)).slice(0, n);
 
 async function get(url, name) {
   const t0 = Date.now();

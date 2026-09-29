@@ -20,9 +20,7 @@ jobs:
 
       - name: Réseau Zenbus
         continue-on-error: true
-        run: |
-          curl -sS -o /dev/null -w "HTTP %{http_code} · TLS ok · %{time_total}s\n" "https://zenbus.net/publicapp/static-data?alias=castres"
-          nscurl --ats-diagnostics "https://zenbus.net/publicapp/static-data?alias=castres" | grep -E "^(Default ATS|Result|Reason)|PASS|FAIL" | head -20
+        run: curl -sS -o /dev/null -w "HTTP %{http_code} · %{time_total}s\n" "https://zenbus.net/publicapp/static-data?alias=castres"
 
       - name: Simulateur
         id: sim
@@ -65,6 +63,8 @@ jobs:
           shoot planner itineraire 25
           shoot planner itineraire-resultats 30 results
           shoot planner itineraire-detail 30 detail
+          shoot planner itineraire-phrase 30 phrase
+          shoot planner trajet-suivi 40 followed
           shoot map carte
           shoot lines ligne-10 20 line
           shoot search arret-gare-sncf 20 stop

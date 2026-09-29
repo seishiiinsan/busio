@@ -53,6 +53,24 @@ final class PlaceSearchService: NSObject, MKLocalSearchCompleterDelegate {
         )
     }
 
+    /// Premier lieu Plans correspondant à un texte libre, dans l'agglomération.
+    static func search(_ text: String) async -> Place? {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = text
+        request.region = region
+        request.resultTypes = [.address, .pointOfInterest]
+        guard let items = try? await MKLocalSearch(request: request).start().mapItems else { return nil }
+        let center = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+        guard let item = items.first(where: { $0.location.distance(from: center) < 40_000 }) else { return nil }
+        let coordinate = item.location.coordinate
+        return Place(
+            name: item.name ?? text.capitalized,
+            subtitle: "Plans",
+            coordinate: Coordinate(latitude: coordinate.latitude, longitude: coordinate.longitude),
+            kind: item.pointOfInterestCategory == nil ? .address : .pointOfInterest
+        )
+    }
+
     nonisolated func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         MainActor.assumeIsolated {
             suggestions = completer.results.prefix(8).map {

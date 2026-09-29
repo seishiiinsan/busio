@@ -32,6 +32,10 @@ struct JourneyActivityAttributes: ActivityAttributes {
         var stopsAway: Int?
         var delayMinutes: Int?
         var updatedAt: Date
+        /// Arrêts restants avant la descente, d'après le GPS (dans le bus).
+        var stopsLeft: Int? = nil
+        /// Correspondance menacée, bus supprimé.
+        var warning: String? = nil
     }
 
     var title: String
@@ -39,22 +43,37 @@ struct JourneyActivityAttributes: ActivityAttributes {
 }
 
 extension JourneyActivityAttributes.ContentState {
-    init(journey: PlannedJourney, styles: [LineStyle], stopName: (String) -> String, now: Date = Date()) {
+    /// Étape en cours : d'après le GPS s'il suit le trajet, sinon d'après l'heure.
+    init(journey: PlannedJourney, styles: [LineStyle], stopName: (String) -> String, progress: JourneyTracker.Progress? = nil, warning: String? = nil, now: Date = Date()) {
         let rides = journey.rides
-        // Étape en cours : premier bus pas encore arrivé à sa descente.
-        let index = rides.firstIndex { $0.arrival > now } ?? max(0, rides.count - 1)
+        let tracked = progress.flatMap { now.timeIntervalSince($0.updatedAt) < 10 * 60 ? $0 : nil }
+        var index = rides.firstIndex { $0.arrival > now } ?? max(0, rides.count - 1)
+        let phase: Phase
+        switch tracked?.stage {
+        case .onboard(let ride)? where rides.indices.contains(ride):
+            index = ride
+            phase = .riding
+        case .toStop(let ride)? where rides.indices.contains(ride):
+            index = ride
+            phase = .boarding
+        case .arrived?:
+            phase = .arrived
+        default:
+            if rides.isEmpty {
+                phase = journey.arrival > now ? .boarding : .arrived
+            } else {
+                let ride = rides[index]
+                phase = ride.departure > now ? .boarding : (ride.arrival > now ? .riding : .arrived)
+            }
+        }
         let ride = rides.isEmpty ? nil : rides[index]
         let style = ride.flatMap { r in styles.first { $0.id == r.lineID } }
-
-        let phase: Phase
-        if let ride {
-            phase = ride.departure > now ? .boarding : (ride.arrival > now ? .riding : .arrived)
-        } else {
-            phase = journey.arrival > now ? .boarding : .arrived
-        }
+        let stopsLeft = phase == .riding ? tracked?.stopsLeft : nil
 
         var next: String?
-        if let ride, index + 1 < rides.count {
+        if phase == .riding, let stopsLeft, stopsLeft > 0 {
+            next = stopsLeft == 1 ? "Descente au prochain arrêt" : "Descente dans \(stopsLeft) arrêts"
+        } else if let ride, index + 1 < rides.count {
             let following = rides[index + 1]
             let badge = styles.first { $0.id == following.lineID }?.badge ?? ""
             next = "puis \(badge) à \(stopName(following.board.stopID)) \(TimeText.clock(following.departure))"
@@ -65,7 +84,7 @@ extension JourneyActivityAttributes.ContentState {
         self.init(
             phase: phase,
             target: ride.map { phase == .riding ? $0.arrival : $0.departure } ?? journey.arrival,
-            leaveAt: index == 0 && journey.departure > now ? journey.departure : nil,
+            leaveAt: index == 0 && phase == .boarding && journey.departure > now ? journey.departure : nil,
             lineBadge: style?.badge ?? "🚶",
             lineColorHex: style?.color.hex ?? RGBColor.neutral.hex,
             lineTextColorHex: style?.textColor.hex ?? RGBColor.white.hex,
@@ -77,7 +96,9 @@ extension JourneyActivityAttributes.ContentState {
             isCancelled: ride?.isCancelled ?? false,
             stopsAway: phase == .boarding ? ride?.stopsAway : nil,
             delayMinutes: ride?.delay.map { Int(($0 / 60).rounded()) },
-            updatedAt: now
+            updatedAt: now,
+            stopsLeft: stopsLeft,
+            warning: warning
         )
     }
 }
@@ -90,30 +111,35 @@ enum JourneyActivityController {
         Activity<JourneyActivityAttributes>.activities.first { $0.activityState == .active || $0.activityState == .stale }
     }
 
-    static func state(for journey: PlannedJourney, snapshot: TripSnapshot, network: Network?, now: Date = Date()) -> JourneyActivityAttributes.ContentState {
-        JourneyActivityAttributes.ContentState(journey: journey, styles: snapshot.lines, stopName: { network?.stop($0)?.name ?? "" }, now: now)
+    static func state(for followed: FollowedJourney, network: Network?, now: Date = Date()) -> JourneyActivityAttributes.ContentState? {
+        guard let journey = followed.journey else { return nil }
+        let context = JourneyContext(followed: followed, network: network)
+        let warning = followed.issue.map { context.issueShort($0, journey: journey, planB: followed.planB) }
+        return JourneyActivityAttributes.ContentState(journey: journey, styles: context.styles, stopName: context.stopName,
+                                                      progress: followed.progress, warning: warning, now: now)
     }
 
-    /// Suit `journey` (remplace une éventuelle activité en cours) et mémorise la recherche pour les actualisations.
-    static func start(journey: PlannedJourney, snapshot: TripSnapshot, network: Network?) async throws {
-        AppGroup.store.save(followed: FollowedJourney(request: snapshot.request, journey: journey, title: snapshot.title))
-        let state = state(for: journey, snapshot: snapshot, network: network)
+    /// Suit `journey` (remplace un éventuel suivi en cours) et l'enregistre pour les actualisations.
+    @discardableResult
+    static func start(journey: PlannedJourney, request: JourneyRequest, title: String, network: Network?) async throws -> FollowedJourney {
+        let followed = FollowedJourney(request: request, journey: journey, title: title)
+        AppGroup.store.save(followed: followed)
+        guard isEnabled, let state = state(for: followed, network: network) else { return followed }
         let content = ActivityContent(state: state, staleDate: journey.arrival.addingTimeInterval(120), relevanceScore: 100)
         if let current {
             await current.update(content)
-            return
+        } else {
+            let attributes = JourneyActivityAttributes(title: title, destinationName: request.to.name)
+            _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
         }
-        let attributes = JourneyActivityAttributes(title: snapshot.title, destinationName: snapshot.destinationName)
-        _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
+        return followed
     }
 
-    static func update(journey: PlannedJourney, snapshot: TripSnapshot, network: Network?, now: Date = Date()) async {
-        guard let activity = current else { return }
-        let state = state(for: journey, snapshot: snapshot, network: network, now: now)
+    static func update(followed: FollowedJourney, network: Network?, now: Date = Date()) async {
+        guard let activity = current, let journey = followed.journey, let state = state(for: followed, network: network, now: now) else { return }
         let content = ActivityContent(state: state, staleDate: journey.arrival.addingTimeInterval(120), relevanceScore: 100)
-        if journey.arrival < now {
+        if state.phase == .arrived || followed.isOver(at: now) {
             await activity.end(content, dismissalPolicy: .after(now.addingTimeInterval(5 * 60)))
-            AppGroup.store.save(followed: nil)
         } else {
             await activity.update(content)
         }

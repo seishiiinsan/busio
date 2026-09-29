@@ -7,6 +7,14 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
     @State private var editing: FavoriteDraft?
+    @State private var pickingPlace: NamedPlace?
+
+    enum NamedPlace: String, Identifiable {
+        case home, work
+        var id: String { rawValue }
+        var title: String { self == .home ? "Maison" : "Travail" }
+        var icon: String { self == .home ? "house.fill" : "briefcase.fill" }
+    }
 
     var body: some View {
         @Bindable var app = app
@@ -37,6 +45,15 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    placeRow(.home, place: app.preferences.home)
+                    placeRow(.work, place: app.preferences.work)
+                } header: {
+                    Text("Lieux")
+                } footer: {
+                    Text("Pour chercher « demain 9h au boulot » ou « à la maison » dans l'onglet Itinéraire.")
+                }
+
+                Section {
                     Picker("Préférence", selection: $app.preferences.routing.preference) {
                         ForEach(RoutingOptions.Preference.allCases) { Text($0.title).tag($0) }
                     }
@@ -63,6 +80,8 @@ struct SettingsView: View {
                 Section {
                     Toggle("Rappels « pars maintenant »", isOn: $app.preferences.leaveNowAlerts)
                     Toggle("Retards et suppressions", isOn: $app.preferences.delayAlerts)
+                    Toggle("Correspondance menacée (plan B)", isOn: $app.preferences.transferAlerts)
+                    Toggle("Avant la descente", isOn: $app.preferences.alightAlerts)
                     if app.preferences.delayAlerts {
                         Stepper("Alerter dès \(app.preferences.delayThresholdMinutes) min de retard", value: $app.preferences.delayThresholdMinutes, in: 1...15)
                     }
@@ -77,7 +96,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Alertes")
                 } footer: {
-                    Text("Rappels pour l'itinéraire suivi et pour les trajets favoris ayant une heure d'arrivée et l'option « rappel ». Sans serveur push, iOS réveille Busio quand il le juge bon : pour un suivi garanti, utilise l'automatisation ci-dessous.")
+                    Text("Itinéraire suivi : Busio vérifie le temps réel toutes les 45 s, propose un plan B si une correspondance saute et, avec le GPS, te prévient au moment de descendre (sinon à l'heure prévue). Trajets favoris : rappels si une heure d'arrivée et l'option « rappel » sont définies.")
                 }
 
                 Section("Automatisation conseillée") {
@@ -108,7 +127,32 @@ struct SettingsView: View {
                 }
             }
             .sheet(item: $editing) { FavoriteTripEditor(draft: $0) }
+            .sheet(item: $pickingPlace) { kind in
+                PlaceSearchView(title: kind.title, allowsCurrentLocation: false) { place in
+                    guard let place else { return }
+                    if kind == .home { app.preferences.home = place } else { app.preferences.work = place }
+                }
+            }
             .task { await refreshNotificationStatus() }
+        }
+    }
+
+    private func placeRow(_ kind: NamedPlace, place: Place?) -> some View {
+        Button {
+            pickingPlace = kind
+        } label: {
+            LabeledContent {
+                Text(place?.name ?? "Choisir").foregroundStyle(place == nil ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+            } label: {
+                Label(kind.title, systemImage: kind.icon).foregroundStyle(.primary)
+            }
+        }
+        .swipeActions {
+            if place != nil {
+                Button("Retirer", role: .destructive) {
+                    if kind == .home { app.preferences.home = nil } else { app.preferences.work = nil }
+                }
+            }
         }
     }
 

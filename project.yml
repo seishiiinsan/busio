@@ -59,7 +59,7 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Busio utilise ta position pour trouver les arrêts proches et calculer le temps de marche jusqu'à ton bus."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Busio utilise ta position pour trouver les arrêts proches, calculer la marche jusqu'à ton bus et, pendant un trajet suivi, savoir quand tu es dans le bus pour te prévenir avant ta descente."
         CODE_SIGN_ENTITLEMENTS: Busio/Busio.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

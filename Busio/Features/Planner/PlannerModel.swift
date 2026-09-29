@@ -32,6 +32,12 @@ final class PlannerModel {
     private(set) var isSearching = false
     private(set) var errorMessage: String?
 
+    /// Recherche en phrase (« demain 9h au boulot »).
+    var phrase = ""
+    private(set) var isInterpreting = false
+    /// Ce qui a été compris (ou pourquoi ça n'a pas marché).
+    private(set) var interpretation: (text: String, isProblem: Bool, usedModel: Bool)?
+
     var hasQuery: Bool { to != nil }
 
     var timeConstraint: TimeConstraint {
@@ -60,6 +66,57 @@ final class PlannerModel {
         errorMessage = nil
         favoriteID = nil
         timeMode = .now
+        interpretation = nil
+    }
+
+    /// Remplit le formulaire depuis une phrase ; la recherche part d'elle-même.
+    func interpret(app: AppModel, now: Date = Date()) async {
+        let text = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        isInterpreting = true
+        defer { isInterpreting = false }
+        let outcome = await QueryInterpreter(app: app).interpret(text, now: now)
+        guard let destination = outcome.destination else {
+            interpretation = (outcome.problem ?? "Destination non comprise.", true, outcome.usedModel)
+            return
+        }
+        from = outcome.origin
+        to = destination
+        favoriteID = nil
+        switch outcome.time {
+        case .departAt(let date)?:
+            timeMode = .departAt
+            self.date = date
+        case .arriveBy(let date)?:
+            timeMode = .arriveBy
+            self.date = date
+        case .now?, nil:
+            timeMode = .now
+        }
+        if let preference = outcome.preference { self.preference = preference }
+        interpretation = (summary(), false, outcome.usedModel)
+        phrase = ""
+    }
+
+    /// « Ma position → Gares Mazamet · arrivée avant 9:00 demain »
+    private func summary(now: Date = Date()) -> String {
+        var text = "\(from?.name ?? "Ma position") → \(to?.name ?? "…")"
+        let calendar = TransitClock.calendar
+        let day: String
+        if calendar.isDate(date, inSameDayAs: now) {
+            day = ""
+        } else if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(date, inSameDayAs: tomorrow) {
+            day = " demain"
+        } else {
+            day = " " + date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR")))
+        }
+        switch timeMode {
+        case .now: text += " · maintenant"
+        case .departAt: text += " · départ \(TimeText.clock(date))\(day)"
+        case .arriveBy: text += " · arrivée avant \(TimeText.clock(date))\(day)"
+        }
+        if preference != .fastest { text += " · \(preference.title.lowercased())" }
+        return text
     }
 
     /// Remplit le formulaire depuis un favori (heure d'arrivée comprise si elle s'applique aujourd'hui).

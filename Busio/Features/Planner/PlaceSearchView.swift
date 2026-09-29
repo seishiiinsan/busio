@@ -50,6 +50,12 @@ struct PlaceSearchView: View {
                 }
             }
         }
+        if app.preferences.home != nil || app.preferences.work != nil {
+            Section("Mes lieux") {
+                if let home = app.preferences.home { placeRow(home, icon: "house.fill") }
+                if let work = app.preferences.work { placeRow(work, icon: "briefcase.fill") }
+            }
+        }
         let favoritePlaces = uniquePlaces(app.preferences.favoriteTrips.flatMap { [$0.from, $0.to] }.filter { $0.kind != .currentLocation })
         if !favoritePlaces.isEmpty {
             Section("Trajets favoris") {

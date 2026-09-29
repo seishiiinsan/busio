@@ -8,7 +8,6 @@ struct JourneyDetailView: View {
     let route: JourneyRoute
     let model: PlannerModel
     @State private var activityMessage: String?
-    @State private var following = false
 
     /// Version la plus récente (le planificateur s'actualise en tâche de fond).
     private var journey: PlannedJourney { model.journey(id: route.journeyID) ?? route.journey }
@@ -24,23 +23,30 @@ struct JourneyDetailView: View {
 
                 if let status = model.result?.status { FeedStatusBanner(status: status) }
 
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                        StepRow(step: step, isLast: index == steps.count - 1)
-                    }
-                }
-                .padding(.vertical, 8)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                JourneyStepsList(steps: JourneyStep.list(for: journey, originName: model.result?.origin.name ?? "Départ",
+                                                          destinationName: model.result?.destination.name ?? "Arrivée",
+                                                          stopName: { app.network?.stop($0)?.name ?? "l'arrêt" }))
 
-                Button {
-                    Task { await follow() }
-                } label: {
-                    Label(following ? "Suivi sur l'écran verrouillé" : "Suivre ce trajet", systemImage: following ? "checkmark" : "platter.filled.bottom.iphone")
-                        .frame(maxWidth: .infinity)
+                if app.follower.isFollowing(journey) {
+                    Button {
+                        app.showFollowed = true
+                    } label: {
+                        Label("Trajet suivi : voir le suivi", systemImage: "location.fill.viewfinder")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.large)
+                } else {
+                    Button {
+                        Task { await follow() }
+                    } label: {
+                        Label("Suivre ce trajet", systemImage: "platter.filled.bottom.iphone")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
+                    .disabled(journey.isWalkOnly)
                 }
-                .buttonStyle(.glassProminent)
-                .controlSize(.large)
-                .disabled(journey.isWalkOnly)
 
                 if let activityMessage {
                     Text(activityMessage).font(.caption).foregroundStyle(.secondary)
@@ -76,23 +82,38 @@ struct JourneyDetailView: View {
         return parts.joined(separator: " · ")
     }
 
-    // MARK: Étapes
+    // MARK: Suivi
 
-    enum Step {
-        case start(name: String, time: Date)
-        case walk(WalkLeg)
-        case ride(RideLeg)
-        case wait(TimeInterval, stop: String)
-        case arrive(name: String, time: Date)
+    private func follow() async {
+        guard let result = model.result else { return }
+        do {
+            try await app.follow(journey, request: result.request, title: model.title)
+            if app.location.canAsk { app.location.requestPermission() }
+            activityMessage = JourneyActivityController.isEnabled
+                ? "Compte à rebours sur l'écran verrouillé. Busio te prévient si une correspondance saute et avant ta descente."
+                : "Suivi actif. Active les Live Activities (Réglages › Busio) pour le compte à rebours sur l'écran verrouillé."
+            app.showFollowed = true
+        } catch {
+            activityMessage = error.localizedDescription
+        }
     }
+}
 
-    private var steps: [Step] {
-        var steps: [Step] = [.start(name: model.result?.origin.name ?? "Départ", time: journey.departure)]
+/// Étapes d'un itinéraire : départ, marche, bus, attente, arrivée.
+enum JourneyStep {
+    case start(name: String, time: Date)
+    case walk(WalkLeg)
+    case ride(RideLeg)
+    case wait(TimeInterval, stop: String)
+    case arrive(name: String, time: Date)
+
+    static func list(for journey: PlannedJourney, originName: String, destinationName: String, stopName: (String) -> String) -> [JourneyStep] {
+        var steps: [JourneyStep] = [.start(name: originName, time: journey.departure)]
         var previousEnd: Date?
         for leg in journey.legs {
             if case .ride(let ride) = leg, let previousEnd {
                 let wait = ride.departure.timeIntervalSince(previousEnd)
-                if wait >= 60 { steps.append(.wait(wait, stop: app.network?.stop(ride.board.stopID)?.name ?? "l'arrêt")) }
+                if wait >= 60 { steps.append(.wait(wait, stop: stopName(ride.board.stopID))) }
             }
             switch leg {
             case .walk(let walk): steps.append(.walk(walk))
@@ -100,33 +121,32 @@ struct JourneyDetailView: View {
             }
             previousEnd = leg.end
         }
-        steps.append(.arrive(name: model.result?.destination.name ?? "Arrivée", time: journey.arrival))
+        steps.append(.arrive(name: destinationName, time: journey.arrival))
         return steps
     }
+}
 
-    // MARK: Suivi
+struct JourneyStepsList: View {
+    let steps: [JourneyStep]
+    /// Étape en cours (suivi), mise en avant.
+    var current: Int? = nil
 
-    private func follow() async {
-        guard let snapshot = model.snapshot(network: app.network) else { return }
-        guard JourneyActivityController.isEnabled else {
-            activityMessage = "Les Live Activities sont désactivées pour Busio (Réglages › Busio)."
-            return
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                StepRow(step: step, isLast: index == steps.count - 1, isCurrent: index == current)
+            }
         }
-        do {
-            try await JourneyActivityController.start(journey: journey, snapshot: snapshot, network: app.network)
-            await JourneyAlerts.scheduleLeave(for: journey, snapshot: snapshot, id: "followed", preferences: app.preferences, network: app.network)
-            following = true
-            activityMessage = "Le compte à rebours s'affiche sur l'écran verrouillé et dans la Dynamic Island."
-        } catch {
-            activityMessage = error.localizedDescription
-        }
+        .padding(.vertical, 8)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
 private struct StepRow: View {
     @Environment(AppModel.self) private var app
-    let step: JourneyDetailView.Step
+    let step: JourneyStep
     let isLast: Bool
+    var isCurrent = false
     @State private var expanded = false
 
     var body: some View {
@@ -145,6 +165,12 @@ private struct StepRow: View {
                 .padding(.bottom, isLast ? 4 : 18)
         }
         .padding(.horizontal, 14)
+        .padding(.vertical, isCurrent ? 6 : 0)
+        .background {
+            if isCurrent {
+                RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentColor.opacity(0.12)).padding(.horizontal, 6)
+            }
+        }
     }
 
     private var time: Date? {
@@ -252,8 +278,8 @@ private struct StepRow: View {
     }
 }
 
-/// Carte de l'itinéraire : marche en pointillés, bus aux couleurs des lignes.
-private struct JourneyMap: View {
+/// Carte de l'itinéraire : marche en pointillés, bus aux couleurs des lignes, sur le tracé réel.
+struct JourneyMap: View {
     @Environment(AppModel.self) private var app
     let journey: PlannedJourney
     let origin: Place?
@@ -280,7 +306,12 @@ private struct JourneyMap: View {
             case .walk(let walk):
                 return Segment(id: index, coordinates: [walk.from.clCoordinate, walk.to.clCoordinate], color: .gray, dashed: true)
             case .ride(let ride):
-                let coordinates = ride.calls.compactMap { app.network?.stop($0.stopID)?.coordinate.clCoordinate }
+                let coordinates: [CLLocationCoordinate2D]
+                if let network = app.network {
+                    coordinates = RideShape(ride: ride, network: network).points.map(\.clCoordinate)
+                } else {
+                    coordinates = []
+                }
                 return Segment(id: index, coordinates: coordinates, color: app.network?.line(ride.lineID)?.tint ?? .accentColor, dashed: false)
             }
         }

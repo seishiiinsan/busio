@@ -20,6 +20,7 @@ struct BusioApp: App {
 
 struct RootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var app = app
@@ -43,6 +44,12 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $app.showOnboarding) {
             OnboardingView()
+        }
+        .sheet(isPresented: $app.showFollowed) {
+            FollowedJourneyView()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { app.resumeFollowing() }
         }
         .overlay {
             if app.network == nil, let error = app.loadError {

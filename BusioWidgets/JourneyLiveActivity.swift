@@ -33,7 +33,9 @@ struct JourneyLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            if let leaveAt = context.state.leaveAt {
+                            if let warning = context.state.warning {
+                                Label(warning, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            } else if let leaveAt = context.state.leaveAt {
                                 Text("Pars à \(TimeText.clock(leaveAt))").foregroundStyle(.orange)
                             }
                             if let next = context.state.nextStep { Text(next).foregroundStyle(.secondary) }
@@ -53,9 +55,17 @@ struct JourneyLiveActivity: Widget {
             } compactLeading: {
                 LineChip(state: context.state, size: 12)
             } compactTrailing: {
-                Countdown(state: context.state)
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
-                    .frame(maxWidth: 52)
+                Group {
+                    if context.state.warning != nil {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    } else if let stops = context.state.stopsLeft {
+                        Text(stops <= 1 ? "Desc." : "\(stops) arr.")
+                    } else {
+                        Countdown(state: context.state)
+                    }
+                }
+                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .frame(maxWidth: 52)
             } minimal: {
                 LineChip(state: context.state, size: 10)
             }
@@ -68,7 +78,7 @@ enum PhaseText {
     static func headline(_ state: JourneyActivityAttributes.ContentState) -> String {
         switch state.phase {
         case .boarding: "\(state.lineBadge) à \(state.stopName) → \(state.headsign)"
-        case .riding: "Descends à \(state.stopName)"
+        case .riding: state.stopsLeft == 1 ? "Descends au prochain arrêt" : "Descends à \(state.stopName)"
         case .arrived: "Arrivé"
         }
     }
@@ -80,6 +90,12 @@ private struct LockScreenView: View {
     var body: some View {
         let state = context.state
         VStack(alignment: .leading, spacing: 10) {
+            if let warning = state.warning {
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+                    .lineLimit(2)
+            }
             HStack(alignment: .firstTextBaseline) {
                 LineChip(state: state, size: 16)
                 VStack(alignment: .leading, spacing: 1) {
@@ -111,6 +127,8 @@ private struct LockScreenView: View {
             HStack {
                 if let leaveAt = state.leaveAt {
                     Label("Pars à \(TimeText.clock(leaveAt))", systemImage: "figure.walk").foregroundStyle(.orange)
+                } else if state.stopsLeft != nil {
+                    Label("Suivi GPS dans le bus", systemImage: "location.fill").foregroundStyle(.secondary)
                 } else if let stops = state.stopsAway, state.isLive {
                     Label(stops <= 1 ? "Le bus arrive" : "Le bus est à \(stops) arrêts", systemImage: "bus.fill")
                 } else {
@@ -169,5 +187,6 @@ private struct LineChip: View {
     JourneyLiveActivity()
 } contentStates: {
     PreviewData.activityState
+    PreviewData.activityWarningState
 }
 #endif

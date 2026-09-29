@@ -19,6 +19,10 @@ struct PlannerView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
+                    if app.follower.followed?.journey != nil {
+                        FollowedJourneyBanner()
+                    }
+                    PhraseField(model: model)
                     SearchForm(model: model, picking: $picking)
                     if model.hasQuery {
                         resultsSection
@@ -71,9 +75,27 @@ struct PlannerView: View {
                     app.demoScreen = nil
                     path.append(JourneyRoute(journeyID: first.id, journey: first))
                 }
+                if app.demoScreen == "followed", let result = model.result,
+                   let journey = result.journeys.first(where: { $0.transfers > 0 }) ?? result.journeys.first {
+                    app.demoScreen = nil
+                    Task {
+                        try? await app.follow(journey, request: result.request, title: model.title)
+                        await app.follower.simulateMissedTransfer()
+                        app.showFollowed = true
+                    }
+                }
                 #endif
             }
-            .onAppear { consumePendingFavorite(app.pendingFavoriteID) }
+            .onAppear {
+                consumePendingFavorite(app.pendingFavoriteID)
+                #if DEBUG
+                if app.demoScreen == "phrase" {
+                    app.demoScreen = nil
+                    model.phrase = "demain 9h au boulot"
+                    Task { await model.interpret(app: app) }
+                }
+                #endif
+            }
             .sheet(item: $picking) { field in
                 PlaceSearchView(title: field == .from ? "Départ" : "Arrivée", allowsCurrentLocation: field == .from) { place in
                     if field == .from { model.from = place } else { model.to = place }
@@ -188,6 +210,46 @@ struct JourneyRoute: Hashable {
 }
 
 // MARK: - Formulaire
+
+/// « Demain 9h au boulot » : remplit le formulaire (dictée comprise, via le clavier).
+private struct PhraseField: View {
+    @Environment(AppModel.self) private var app
+    @Bindable var model: PlannerModel
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(systemName: SmartQueryParser.isAvailable ? "sparkles" : "text.bubble")
+                    .foregroundStyle(.tint)
+                TextField("Demain 9h au boulot, gare de Mazamet avant 8h30…", text: $model.phrase)
+                    .focused($focused)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .onSubmit { Task { await model.interpret(app: app) } }
+                if model.isInterpreting {
+                    ProgressView()
+                } else if !model.phrase.isEmpty {
+                    Button("Effacer", systemImage: "xmark.circle.fill") { model.phrase = "" }
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .glassEffect(.regular.interactive(), in: .capsule)
+
+            if let interpretation = model.interpretation {
+                Label(interpretation.text, systemImage: interpretation.isProblem ? "exclamationmark.bubble" : (interpretation.usedModel ? "sparkles" : "checkmark.bubble"))
+                    .font(.caption)
+                    .foregroundStyle(interpretation.isProblem ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+                    .padding(.horizontal, 8)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.snappy, value: model.interpretation?.text)
+    }
+}
 
 private struct SearchForm: View {
     @Environment(AppModel.self) private var app

@@ -49,5 +49,11 @@ enum PreviewData {
         let snapshot = snapshot
         return JourneyActivityAttributes.ContentState(journey: snapshot.journeys[0], styles: snapshot.lines, stopName: { _ in "Archipel" })
     }
+
+    static var activityWarningState: JourneyActivityAttributes.ContentState {
+        var state = activityState
+        state.warning = "Correspondance ratée · plan B 10 à 18:55"
+        return state
+    }
 }
 #endif

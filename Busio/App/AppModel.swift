@@ -2,6 +2,7 @@ import BackgroundTasks
 import Foundation
 import Observation
 import SwiftUI
+import UserNotifications
 import BusioKit
 
 @Observable
@@ -18,6 +19,8 @@ final class AppModel {
     var demoScreen: String?
     var showOnboarding: Bool
     var showSettings = false
+    /// Fiche de l'itinéraire suivi (plan B, étapes).
+    var showFollowed = false
 
     var preferences: UserPreferences {
         didSet {
@@ -32,6 +35,7 @@ final class AppModel {
 
     let location = LocationService()
     let walking = WalkingTimeService()
+    let follower = JourneyFollower()
     let service = Transit.service
 
     init() {
@@ -48,12 +52,20 @@ final class AppModel {
             evening.arriveByMinute = 17 * 60 + 30
             preferences.favoriteTrips = [morning, evening]
             preferences.favorites = [PlaceRef(areaID: "826710003", name: "Gare SNCF", coordinate: Coordinate(latitude: 43.5991, longitude: 2.2319))]
+            preferences.home = archipel
+            preferences.work = mazamet
             preferences.hasCompletedOnboarding = true
             AppGroup.store.save(preferences)
         }
         #endif
         self.preferences = preferences
         showOnboarding = !preferences.hasCompletedOnboarding
+        UNUserNotificationCenter.current().delegate = NotificationPresenter.shared
+        NotificationPresenter.onOpen = { [weak self] identifier in
+            guard identifier.hasPrefix("busio.issue") || identifier.hasPrefix("busio.alight") || identifier.hasSuffix(".followed") else { return }
+            self?.selectedTab = .planner
+            self?.showFollowed = true
+        }
         #if DEBUG
         if let index = arguments.firstIndex(of: "-tab"), arguments.indices.contains(index + 1),
            let tab = Tab(rawValue: arguments[index + 1]) {
@@ -61,17 +73,28 @@ final class AppModel {
         }
         if let index = arguments.firstIndex(of: "-screen"), arguments.indices.contains(index + 1) {
             demoScreen = arguments[index + 1]
-            if demoScreen == "results" || demoScreen == "detail" { pendingFavoriteID = preferences.favoriteTrips.first?.id }
+            if ["results", "detail", "followed"].contains(demoScreen) { pendingFavoriteID = preferences.favoriteTrips.first?.id }
         }
         #endif
     }
 
     func start() async {
         await loadNetwork()
+        resumeFollowing()
         BackgroundRefresh.schedule(preferences: preferences)
         await service.preload()
         await service.refreshStaticData()
         await loadNetwork()
+    }
+
+    /// Reprend le suivi de l'itinéraire en cours (lancement, retour au premier plan).
+    func resumeFollowing() {
+        follower.resume(network: network, locationAuthorized: location.isAuthorized)
+    }
+
+    /// Suit un itinéraire : Live Activity, temps réel, GPS, rappels.
+    func follow(_ journey: PlannedJourney, request: JourneyRequest, title: String) async throws {
+        try await follower.start(journey: journey, request: request, title: title, network: network, locationAuthorized: location.isAuthorized)
     }
 
     func loadNetwork() async {

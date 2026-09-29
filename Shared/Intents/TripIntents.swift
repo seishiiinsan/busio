@@ -92,8 +92,8 @@ struct StartTripActivityIntent: LiveActivityIntent {
             return .result(dialog: "Aucun itinéraire pour \(favorite.displayName) dans les prochaines heures.")
         }
         let network = try? await Transit.service.currentNetwork()
-        try await JourneyActivityController.start(journey: journey, snapshot: snapshot, network: network)
-        await JourneyAlerts.scheduleLeave(for: journey, snapshot: snapshot, id: "followed", preferences: AppGroup.store.loadPreferences(), network: network, now: now)
+        try await JourneyActivityController.start(journey: journey, request: snapshot.request, title: snapshot.title, network: network)
+        await TripRefresher.refreshFollowed(now: now)
         return .result(dialog: IntentDialog(stringLiteral: JourneyText.summary(journey, snapshot: snapshot, network: network, now: now)))
     }
 }
@@ -119,6 +119,7 @@ struct StopTripActivityIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         await JourneyActivityController.endAll()
+        JourneyAlerts.cancelFollowedAlerts()
         return .result()
     }
 }

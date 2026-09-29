@@ -148,3 +148,23 @@ private struct LineChip: View {
             .background(Color(hex: attributes.lineColorHex), in: RoundedRectangle(cornerRadius: size * 0.35, style: .continuous))
     }
 }
+
+#if DEBUG
+#Preview("Écran verrouillé", as: .content, using: PreviewData.activityAttributes) {
+    CommuteLiveActivity()
+} contentStates: {
+    PreviewData.activityState
+}
+
+#Preview("Dynamic Island", as: .dynamicIsland(.expanded), using: PreviewData.activityAttributes) {
+    CommuteLiveActivity()
+} contentStates: {
+    PreviewData.activityState
+}
+
+#Preview("Compact", as: .dynamicIsland(.compact), using: PreviewData.activityAttributes) {
+    CommuteLiveActivity()
+} contentStates: {
+    PreviewData.activityState
+}
+#endif

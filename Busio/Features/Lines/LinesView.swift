@@ -153,19 +153,23 @@ private struct LineStopRow: View {
                     .padding(.top, isFirst ? 22 : -8)
                     .padding(.bottom, isLast ? 22 : -8)
                     .frame(maxHeight: .infinity)
-                Circle()
-                    .fill(Color(.systemBackground))
-                    .stroke(line.tint, lineWidth: 3)
-                    .frame(width: 13, height: 13)
-                    .padding(.top, 15)
                 if busesAfter > 0 {
+                    // Un bus vient de desservir cet arrêt (ou y est à quai).
                     Image(systemName: "bus.fill")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(line.onTint)
-                        .padding(4)
+                        .frame(width: 24, height: 24)
                         .background(line.tint, in: Circle())
-                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
-                        .padding(.top, 34)
+                        .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 2))
+                        .padding(.top, 10)
+                        .symbolEffect(.pulse, options: .repeating)
+                        .accessibilityLabel("Bus à cet arrêt")
+                } else {
+                    Circle()
+                        .fill(Color(.systemBackground))
+                        .stroke(line.tint, lineWidth: 3)
+                        .frame(width: 13, height: 13)
+                        .padding(.top, 15)
                 }
             }
             .frame(width: 26)

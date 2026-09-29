@@ -52,3 +52,10 @@ struct RootView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    RootView()
+        .environment(AppModel())
+}
+#endif

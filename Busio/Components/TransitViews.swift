@@ -172,8 +172,10 @@ struct DepartureClock: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 15)) { context in
+            let farAway = date.timeIntervalSince(context.date) >= 60 * 60
             VStack(alignment: .trailing, spacing: 0) {
-                Text(TimeText.countdown(to: date, from: context.date))
+                // Au-delà d'une heure, l'heure de passage est plus lisible qu'un compte à rebours.
+                Text(farAway ? TimeText.clock(date) : TimeText.countdown(to: date, from: context.date))
                     .font(emphasize ? .system(.title3, design: .rounded).weight(.bold) : .system(.body, design: .rounded).weight(.semibold))
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -182,7 +184,7 @@ struct DepartureClock: View {
                     if let scheduled, abs(scheduled.timeIntervalSince(date)) >= 60 {
                         Text(TimeText.clock(scheduled)).strikethrough().foregroundStyle(.tertiary)
                     }
-                    Text(TimeText.clock(date))
+                    Text(farAway ? "dans \(TimeText.countdown(to: date, from: context.date))" : TimeText.clock(date))
                 }
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)

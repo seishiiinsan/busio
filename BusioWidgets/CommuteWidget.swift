@@ -279,3 +279,23 @@ private struct InlineView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Petit", as: .systemSmall) {
+    CommuteWidget()
+} timeline: {
+    CommuteEntry(date: .now, snapshot: PreviewData.snapshot, needsSetup: false)
+}
+
+#Preview("Moyen", as: .systemMedium) {
+    CommuteWidget()
+} timeline: {
+    CommuteEntry(date: .now, snapshot: PreviewData.snapshot, needsSetup: false)
+}
+
+#Preview("Écran verrouillé", as: .accessoryRectangular) {
+    CommuteWidget()
+} timeline: {
+    CommuteEntry(date: .now, snapshot: PreviewData.snapshot, needsSetup: false)
+}
+#endif

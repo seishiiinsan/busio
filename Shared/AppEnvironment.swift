@@ -75,8 +75,8 @@ enum TimeText {
     /// « à l'instant », « 4 min », « 1 h 05 »
     static func countdown(to date: Date, from now: Date) -> String {
         let seconds = date.timeIntervalSince(now)
-        if seconds < 45 { return "à l'instant" }
-        let minutes = Int((seconds / 60).rounded(.down))
+        if seconds < 30 { return "à l'instant" }
+        let minutes = max(1, Int((seconds / 60).rounded(.down)))
         if minutes < 60 { return "\(minutes) min" }
         return "\(minutes / 60) h \(String(format: "%02d", minutes % 60))"
     }

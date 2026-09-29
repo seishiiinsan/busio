@@ -152,7 +152,10 @@ private struct Countdown: View {
     let state: JourneyActivityAttributes.ContentState
 
     var body: some View {
-        if state.target > Date() {
+        if state.target.timeIntervalSinceNow > 3600 {
+            // Plus d'une heure : l'heure plutôt qu'un compte à rebours illisible.
+            Text(TimeText.clock(state.target)).monospacedDigit().multilineTextAlignment(.trailing)
+        } else if state.target > Date() {
             Text(timerInterval: Date()...state.target, countsDown: true, showsHours: false)
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)

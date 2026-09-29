@@ -110,10 +110,20 @@ private struct StatusCard: View {
             }
             Spacer(minLength: 0)
             if let target = status.target, target > Date() {
-                Text(timerInterval: Date()...target, countsDown: true, showsHours: false)
-                    .font(.system(.title2, design: .rounded).weight(.bold))
-                    .monospacedDigit()
-                    .frame(maxWidth: 90, alignment: .trailing)
+                Group {
+                    // Au-delà d'une heure, un compte à rebours en minutes ne se lit plus.
+                    if target.timeIntervalSinceNow > 3600 {
+                        let day = TimeText.dayLabel(target)
+                        Text(day == "aujourd'hui" ? "dans \(TimeText.duration(target.timeIntervalSinceNow))" : day)
+                            .font(.system(.headline, design: .rounded))
+                    } else {
+                        Text(timerInterval: Date()...target, countsDown: true, showsHours: false)
+                            .font(.system(.title2, design: .rounded).weight(.bold))
+                    }
+                }
+                .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 100, alignment: .trailing)
             }
         }
         .padding(16)

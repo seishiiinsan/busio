@@ -6,64 +6,70 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
+    @State private var editing: FavoriteDraft?
 
     var body: some View {
         @Bindable var app = app
         NavigationStack {
             Form {
                 Section {
-                    NavigationLink {
-                        StopPickerView(title: "Arrêt domicile", selected: app.preferences.commute.home) {
-                            app.preferences.commute.home = PlaceRef($0)
+                    ForEach(app.preferences.favoriteTrips) { favorite in
+                        Button {
+                            editing = FavoriteDraft(favorite)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(favorite.displayName).foregroundStyle(.primary)
+                                if let minute = favorite.arriveByMinute {
+                                    Text("Arrivée \(TimeText.clock(FavoriteTrip.date(minute: minute, on: Date())))\(favorite.leaveAlerts ? " · rappel" : "")")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
-                    } label: {
-                        LabeledContent("Domicile", value: app.preferences.commute.home?.name ?? "Choisir")
                     }
-                    NavigationLink {
-                        StopPickerView(title: "Arrêt travail", selected: app.preferences.commute.work) {
-                            app.preferences.commute.work = PlaceRef($0)
-                        }
-                    } label: {
-                        LabeledContent("Travail", value: app.preferences.commute.work?.name ?? "Choisir")
+                    .onDelete { app.preferences.favoriteTrips.remove(atOffsets: $0) }
+                    .onMove { app.preferences.favoriteTrips.move(fromOffsets: $0, toOffset: $1) }
+                    Button("Ajouter un trajet favori", systemImage: "plus") { editing = FavoriteDraft() }
+                } header: {
+                    Text("Trajets favoris")
+                } footer: {
+                    Text("Ils apparaissent sur l'accueil, dans les widgets et avec Siri. Le premier sert par défaut quand aucun n'a d'heure d'arrivée proche.")
+                }
+
+                Section {
+                    Picker("Préférence", selection: $app.preferences.routing.preference) {
+                        ForEach(RoutingOptions.Preference.allCases) { Text($0.title).tag($0) }
                     }
+                    VStack(alignment: .leading) {
+                        Text("Marche max jusqu'à un arrêt : \(Int(app.preferences.routing.maxWalkDistance)) m")
+                        Slider(value: $app.preferences.routing.maxWalkDistance, in: 300...2_000, step: 100)
+                    }
+                    Stepper("Marge de correspondance : \(Int(app.preferences.routing.minTransferTime / 60)) min",
+                            value: Binding(get: { Int(app.preferences.routing.minTransferTime / 60) },
+                                           set: { app.preferences.routing.minTransferTime = TimeInterval($0 * 60) }),
+                            in: 0...10)
+                    Picker("Allure de marche", selection: $app.preferences.routing.walkSpeed) {
+                        Text("Tranquille").tag(1.0)
+                        Text("Normale").tag(1.25)
+                        Text("Rapide").tag(1.5)
+                    }
+                    Stepper("Correspondances max : \(app.preferences.routing.maxTransfers)", value: $app.preferences.routing.maxTransfers, in: 0...4)
                 } header: {
-                    Text("Mon trajet")
+                    Text("Calcul d'itinéraire")
                 } footer: {
-                    Text("Choisis l'arrêt où tu montes près de chez toi et celui du travail. Busio propose l'aller le matin et le retour l'après-midi.")
+                    Text("La marge laisse le temps de descendre d'un bus et de rejoindre l'autre quai.")
                 }
 
                 Section {
-                    MinutePicker(title: "Arriver au travail avant", minute: $app.preferences.commute.arriveByMinute)
-                    MinutePicker(title: "Sortie du travail", minute: $app.preferences.commute.leaveWorkMinute)
-                    MinutePicker(title: "Bascule aller → retour", minute: $app.preferences.commute.switchMinute)
-                    WeekdayPicker(selection: $app.preferences.commute.workdays)
-                } header: {
-                    Text("Horaires")
-                } footer: {
-                    Text("Le bus « conseillé » est le dernier qui te dépose à l'heure le matin, et le premier après ta sortie le soir.")
-                }
-
-                Section {
-                    Stepper("Marge : \(app.preferences.commute.bufferMinutes) min", value: $app.preferences.commute.bufferMinutes, in: 0...10)
-                    Stepper("Maison → arrêt : \(app.preferences.commute.walkToHomeStopMinutes) min", value: $app.preferences.commute.walkToHomeStopMinutes, in: 0...30)
-                    Stepper("Arrêt → travail : \(app.preferences.commute.walkToWorkStopMinutes) min", value: $app.preferences.commute.walkToWorkStopMinutes, in: 0...30)
-                } header: {
-                    Text("Marche")
-                } footer: {
-                    Text("Quand ta position est disponible, Busio calcule le temps de marche réel avec Plans. Ces valeurs servent sinon.")
-                }
-
-                Section {
-                    Toggle("Rappel « pars maintenant »", isOn: $app.preferences.leaveNowAlerts)
+                    Toggle("Rappels « pars maintenant »", isOn: $app.preferences.leaveNowAlerts)
                     Toggle("Retards et suppressions", isOn: $app.preferences.delayAlerts)
                     if app.preferences.delayAlerts {
                         Stepper("Alerter dès \(app.preferences.delayThresholdMinutes) min de retard", value: $app.preferences.delayThresholdMinutes, in: 1...15)
                     }
-                    Toggle("Live Activity automatique", isOn: $app.preferences.autoLiveActivity)
                     if notificationStatus != .authorized {
                         Button("Autoriser les notifications") {
                             Task {
-                                _ = await CommuteAlerts.requestAuthorization()
+                                _ = await JourneyAlerts.requestAuthorization()
                                 await refreshNotificationStatus()
                             }
                         }
@@ -71,7 +77,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Alertes")
                 } footer: {
-                    Text("Sans serveur push, iOS réveille Busio quand il le juge bon. Pour un suivi garanti chaque matin, crée l'automatisation ci-dessous.")
+                    Text("Rappels pour l'itinéraire suivi et pour les trajets favoris ayant une heure d'arrivée et l'option « rappel ». Sans serveur push, iOS réveille Busio quand il le juge bon : pour un suivi garanti, utilise l'automatisation ci-dessous.")
                 }
 
                 Section("Automatisation conseillée") {
@@ -91,15 +97,17 @@ struct SettingsView: View {
                         app.showOnboarding = true
                     }
                 } footer: {
-                    Text("Données : Zenbus (temps réel) et Communauté d'agglomération de Castres-Mazamet — GTFS Libellus, licence ODbL via transport.data.gouv.fr. Busio n'est pas une application officielle.")
+                    Text("Données : Zenbus (temps réel) et Communauté d'agglomération de Castres-Mazamet — GTFS Libellus, licence ODbL via transport.data.gouv.fr. Adresses : Plans. Busio n'est pas une application officielle.")
                 }
             }
             .navigationTitle("Réglages")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) { EditButton() }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("OK") { dismiss() }
                 }
             }
+            .sheet(item: $editing) { FavoriteTripEditor(draft: $0) }
             .task { await refreshNotificationStatus() }
         }
     }
@@ -116,7 +124,7 @@ struct MinutePicker: View {
 
     var body: some View {
         DatePicker(title, selection: Binding(
-            get: { CommuteSettings.date(minute: minute, on: Date()) },
+            get: { FavoriteTrip.date(minute: minute, on: Date()) },
             set: {
                 let c = TransitClock.calendar.dateComponents([.hour, .minute], from: $0)
                 minute = (c.hour ?? 0) * 60 + (c.minute ?? 0)
@@ -159,9 +167,9 @@ struct AutomationGuide: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Ouvre **Raccourcis** › Automatisation › **+**", systemImage: "1.circle.fill")
-            Label("Choisis **Heure de la journée**, par ex. 8:30, du lundi au vendredi, puis **Exécuter immédiatement**", systemImage: "2.circle.fill")
-            Label("Ajoute l'action Busio **Suivre mon bus**", systemImage: "3.circle.fill")
-            Text("Le compte à rebours apparaît alors tout seul sur l'écran verrouillé, avec un bouton pour l'actualiser.")
+            Label("Choisis **Heure de la journée**, par ex. 8:15, du lundi au vendredi, puis **Exécuter immédiatement**", systemImage: "2.circle.fill")
+            Label("Ajoute l'action Busio **Suivre mon trajet** et choisis ton trajet favori", systemImage: "3.circle.fill")
+            Text("Le compte à rebours apparaît alors tout seul sur l'écran verrouillé, avec les correspondances et un bouton pour l'actualiser.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

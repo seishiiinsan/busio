@@ -4,9 +4,9 @@ import SwiftUI
 import WidgetKit
 import BusioKit
 
-struct CommuteLiveActivity: Widget {
+struct JourneyLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: CommuteActivityAttributes.self) { context in
+        ActivityConfiguration(for: JourneyActivityAttributes.self) { context in
             LockScreenView(context: context)
                 .activityBackgroundTint(nil)
                 .activitySystemActionForegroundColor(.primary)
@@ -14,7 +14,7 @@ struct CommuteLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 6) {
-                        LineChip(attributes: context.attributes, size: 16)
+                        LineChip(state: context.state, size: 16)
                         if context.state.isLive {
                             Image(systemName: "dot.radiowaves.left.and.right").foregroundStyle(.green).font(.caption)
                         }
@@ -28,21 +28,21 @@ struct CommuteLiveActivity: Widget {
                         .padding(.trailing, 4)
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    Text("→ \(context.attributes.headsign)").font(.subheadline.weight(.semibold)).lineLimit(1)
+                    Text(PhaseText.headline(context.state)).font(.subheadline.weight(.semibold)).lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(context.attributes.originName) · \(TimeText.clock(context.state.departure))")
                             if let leaveAt = context.state.leaveAt {
                                 Text("Pars à \(TimeText.clock(leaveAt))").foregroundStyle(.orange)
-                            } else {
-                                Text("Arrivée \(context.attributes.destinationName) \(TimeText.clock(context.state.arrival))").foregroundStyle(.secondary)
                             }
+                            if let next = context.state.nextStep { Text(next).foregroundStyle(.secondary) }
+                            Text("Arrivée \(context.attributes.destinationName) \(TimeText.clock(context.state.arrival))").foregroundStyle(.secondary)
                         }
                         .font(.caption)
+                        .lineLimit(1)
                         Spacer()
-                        Button(intent: RefreshCommuteActivityIntent()) {
+                        Button(intent: RefreshTripActivityIntent()) {
                             Image(systemName: "arrow.clockwise")
                         }
                         .buttonStyle(.plain)
@@ -51,44 +51,53 @@ struct CommuteLiveActivity: Widget {
                     .padding(.horizontal, 4)
                 }
             } compactLeading: {
-                LineChip(attributes: context.attributes, size: 12)
+                LineChip(state: context.state, size: 12)
             } compactTrailing: {
                 Countdown(state: context.state)
                     .font(.system(.caption, design: .rounded).weight(.semibold))
                     .frame(maxWidth: 52)
             } minimal: {
-                LineChip(attributes: context.attributes, size: 10)
+                LineChip(state: context.state, size: 10)
             }
-            .keylineTint(Color(hex: context.attributes.lineColorHex))
+            .keylineTint(Color(hex: context.state.lineColorHex))
+        }
+    }
+}
+
+enum PhaseText {
+    static func headline(_ state: JourneyActivityAttributes.ContentState) -> String {
+        switch state.phase {
+        case .boarding: "\(state.lineBadge) à \(state.stopName) → \(state.headsign)"
+        case .riding: "Descends à \(state.stopName)"
+        case .arrived: "Arrivé"
         }
     }
 }
 
 private struct LockScreenView: View {
-    let context: ActivityViewContext<CommuteActivityAttributes>
+    let context: ActivityViewContext<JourneyActivityAttributes>
 
     var body: some View {
         let state = context.state
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                LineChip(attributes: context.attributes, size: 16)
-                Text("→ \(context.attributes.headsign)")
-                    .font(.headline)
-                    .lineLimit(1)
+                LineChip(state: state, size: 16)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(PhaseText.headline(state)).font(.headline).lineLimit(1)
+                    Text(context.attributes.title).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
                 Spacer()
                 if state.isCancelled {
                     Text("Supprimé").font(.headline).foregroundStyle(.red)
                 } else {
                     Countdown(state: state)
                         .font(.system(.title, design: .rounded).weight(.bold))
-                        .frame(maxWidth: 130, alignment: .trailing)
+                        .frame(maxWidth: 120, alignment: .trailing)
                 }
             }
-            HStack(spacing: 12) {
-                Label {
-                    Text("\(context.attributes.originName) \(TimeText.clock(state.departure))")
-                } icon: {
-                    Image(systemName: "figure.walk")
+            HStack(spacing: 10) {
+                if let next = state.nextStep {
+                    Label(next, systemImage: "arrow.turn.down.right").lineLimit(1)
                 }
                 if let delay = state.delayMinutes, delay != 0 {
                     Text(delay > 0 ? "+\(delay) min" : "\(delay) min")
@@ -101,7 +110,7 @@ private struct LockScreenView: View {
             .font(.caption)
             HStack {
                 if let leaveAt = state.leaveAt {
-                    Label("Pars à \(TimeText.clock(leaveAt))", systemImage: "bell.fill").foregroundStyle(.orange)
+                    Label("Pars à \(TimeText.clock(leaveAt))", systemImage: "figure.walk").foregroundStyle(.orange)
                 } else if let stops = state.stopsAway, state.isLive {
                     Label(stops <= 1 ? "Le bus arrive" : "Le bus est à \(stops) arrêts", systemImage: "bus.fill")
                 } else {
@@ -110,7 +119,7 @@ private struct LockScreenView: View {
                 }
                 Spacer()
                 Text("MAJ \(TimeText.clock(state.updatedAt))").foregroundStyle(.tertiary)
-                Button(intent: RefreshCommuteActivityIntent()) {
+                Button(intent: RefreshTripActivityIntent()) {
                     Image(systemName: "arrow.clockwise")
                 }
                 .buttonStyle(.plain)
@@ -122,48 +131,42 @@ private struct LockScreenView: View {
 }
 
 private struct Countdown: View {
-    let state: CommuteActivityAttributes.ContentState
+    let state: JourneyActivityAttributes.ContentState
 
     var body: some View {
-        if state.departure > Date() {
-            Text(timerInterval: Date()...state.departure, countsDown: true, showsHours: false)
+        if state.target > Date() {
+            Text(timerInterval: Date()...state.target, countsDown: true, showsHours: false)
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)
         } else {
-            Text("Départ").multilineTextAlignment(.trailing)
+            Text(state.phase == .riding ? "Arrêt" : "Départ").multilineTextAlignment(.trailing)
         }
     }
 }
 
 private struct LineChip: View {
-    let attributes: CommuteActivityAttributes
+    let state: JourneyActivityAttributes.ContentState
     let size: CGFloat
 
     var body: some View {
-        Text(attributes.lineBadge)
+        Text(state.lineBadge)
             .font(.system(size: size, weight: .heavy, design: .rounded))
-            .foregroundStyle(Color(hex: attributes.lineTextColorHex))
+            .foregroundStyle(Color(hex: state.lineTextColorHex))
             .padding(.horizontal, size * 0.35)
             .frame(minWidth: size * 1.8, minHeight: size * 1.4)
-            .background(Color(hex: attributes.lineColorHex), in: RoundedRectangle(cornerRadius: size * 0.35, style: .continuous))
+            .background(Color(hex: state.lineColorHex), in: RoundedRectangle(cornerRadius: size * 0.35, style: .continuous))
     }
 }
 
 #if DEBUG
 #Preview("Écran verrouillé", as: .content, using: PreviewData.activityAttributes) {
-    CommuteLiveActivity()
+    JourneyLiveActivity()
 } contentStates: {
     PreviewData.activityState
 }
 
 #Preview("Dynamic Island", as: .dynamicIsland(.expanded), using: PreviewData.activityAttributes) {
-    CommuteLiveActivity()
-} contentStates: {
-    PreviewData.activityState
-}
-
-#Preview("Compact", as: .dynamicIsland(.compact), using: PreviewData.activityAttributes) {
-    CommuteLiveActivity()
+    JourneyLiveActivity()
 } contentStates: {
     PreviewData.activityState
 }

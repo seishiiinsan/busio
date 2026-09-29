@@ -54,7 +54,7 @@ extension Line {
     var onTint: Color { textColor.color }
 }
 
-extension CommuteSnapshot.LineStyle {
+extension LineStyle {
     var tint: Color { color.color }
     var onTint: Color { textColor.color }
 }

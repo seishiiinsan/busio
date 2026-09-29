@@ -24,8 +24,8 @@ struct RootView: View {
     var body: some View {
         @Bindable var app = app
         TabView(selection: $app.selectedTab) {
-            Tab("Trajet", systemImage: "bus.fill", value: AppModel.Tab.commute) {
-                CommuteView()
+            Tab("Itinéraire", systemImage: "arrow.triangle.turn.up.right.diamond.fill", value: AppModel.Tab.planner) {
+                PlannerView()
             }
             Tab("Carte", systemImage: "map.fill", value: AppModel.Tab.map) {
                 LiveMapView()

@@ -2,44 +2,30 @@ import AppIntents
 import Foundation
 import BusioKit
 
-/// « Dis Siri, prochain bus avec Busio »
-struct NextBusIntent: AppIntent {
-    static let title: LocalizedStringResource = "Prochain bus"
-    static let description = IntentDescription("Donne l'heure du prochain bus de ton trajet, en temps réel si disponible.")
+/// « Dis Siri, prochain trajet avec Busio »
+struct NextTripIntent: AppIntent {
+    static let title: LocalizedStringResource = "Prochain trajet"
+    static let description = IntentDescription("Donne le prochain itinéraire d'un trajet favori, correspondances et temps réel compris.")
     static let openAppWhenRun = false
 
-    @Parameter(title: "Sens", default: .automatic)
-    var direction: CommuteDirectionOption
+    @Parameter(title: "Trajet")
+    var trip: FavoriteTripEntity?
 
     init() {}
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ReturnsValue<String> {
         let now = Date()
-        let snapshot: CommuteSnapshot
-        do {
-            snapshot = try await CommuteRefresher.refresh(direction: direction.direction, options: [.reloadWidgets, .updateActivity], now: now)
-        } catch {
-            let message = "Configure d'abord ton trajet dans Busio."
+        guard let favorite = FavoriteTrip.resolve(trip, at: now) else {
+            let message = "Ajoute d'abord un trajet favori dans Busio."
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
-        guard let journey = CommuteRefresher.nextJourney(in: snapshot, now: now) else {
-            let message = "Plus de bus direct de \(snapshot.originName) vers \(snapshot.destinationName) dans les prochaines heures."
+        let snapshot = try await TripRefresher.refresh(favorite: favorite, now: now, reloadWidgets: true)
+        guard let journey = snapshot.next(at: now) else {
+            let message = "Pas d'itinéraire pour \(favorite.displayName) dans les prochaines heures."
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
-        let line = snapshot.style(for: journey.lineID)?.badge ?? ""
-        let minutes = TimeText.minutes(until: journey.departureTime, from: now)
-        let quality: String
-        switch journey.quality {
-        case .live: quality = "suivi en direct"
-        case .estimated: quality = "estimation"
-        case .planned: quality = "horaire prévu"
-        case .theoretical: quality = "horaire théorique"
-        }
-        var message = "Le \(line) part de \(snapshot.originName) à \(TimeText.clock(journey.departureTime)), dans \(minutes) minute\(minutes > 1 ? "s" : ""), \(quality)."
-        if let delay = TimeText.delay(journey.delay) { message += " Écart : \(delay)." }
-        let advice = LeaveAdvice(journey: journey, walk: snapshot.walk, buffer: snapshot.buffer)
-        if advice.leaveAt > now { message += " Pars à \(TimeText.clock(advice.leaveAt))." }
-        message += " Arrivée à \(snapshot.destinationName) vers \(TimeText.clock(journey.arrivalTime))."
+        let network = try? await Transit.service.currentNetwork()
+        let message = "\(favorite.displayName) : " + JourneyText.summary(journey, snapshot: snapshot, network: network, now: now)
         return .result(value: message, dialog: IntentDialog(stringLiteral: message))
     }
 }
@@ -47,22 +33,22 @@ struct NextBusIntent: AppIntent {
 struct BusioShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
-            intent: NextBusIntent(),
+            intent: NextTripIntent(),
             phrases: [
+                "Prochain trajet avec \(.applicationName)",
                 "Prochain bus avec \(.applicationName)",
-                "Quand passe mon bus \(.applicationName)",
-                "\(.applicationName) prochain bus",
+                "Quand partir avec \(.applicationName)",
             ],
-            shortTitle: "Prochain bus",
+            shortTitle: "Prochain trajet",
             systemImageName: "bus.fill"
         )
         AppShortcut(
-            intent: StartCommuteActivityIntent(),
+            intent: StartTripActivityIntent(),
             phrases: [
+                "Suivre mon trajet avec \(.applicationName)",
                 "Suivre mon bus avec \(.applicationName)",
-                "\(.applicationName) suivre mon bus",
             ],
-            shortTitle: "Suivre mon bus",
+            shortTitle: "Suivre mon trajet",
             systemImageName: "platter.filled.bottom.iphone"
         )
     }

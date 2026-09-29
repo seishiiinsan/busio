@@ -7,27 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2D4553D3DD961B6EC223AB0B /* CommuteLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */; };
-		345D1F2722543C3D0C9D7D42 /* CommuteRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */; };
+		0CDFD2A8E9DA1D89800F1997 /* TripWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E94E6C0D4D676D3564475E /* TripWidget.swift */; };
+		0FEE969C5D0BD412379F25F0 /* TripRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FF34AD3DFB685695DA5A11 /* TripRefresher.swift */; };
+		398E1E1EEE52B8E9D9E92201 /* JourneyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9832906216F5B968172E082D /* JourneyActivity.swift */; };
+		3E44A6D6705FACCD33ED599F /* JourneyAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FF97E501530B90DB3B28E4 /* JourneyAlerts.swift */; };
 		3E7FA85F12F872523719F94F /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB36634C22E8455A22A8B006 /* AppEnvironment.swift */; };
 		4E0660A233DCBC814466995B /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCA4027EDBB9DAD89F5901C /* SearchView.swift */; };
 		52A1BEC0370B9FEC4B441455 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708A18546C8605C14476B4B7 /* AppModel.swift */; };
 		5630838E7ADD90002FC9299A /* LinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB935057AD58A185F944E60 /* LinesView.swift */; };
 		58F35EACBC18687E15A6D3FB /* TransitViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D271BAB0A663471A7014A995 /* TransitViews.swift */; };
-		5F9AF6ACE85C62C2584F3CB5 /* CommuteActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */; };
-		629A43A6C3BEC4D1312B41FF /* CommuteModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8DBC5A1B7502C2CDAA6E52 /* CommuteModel.swift */; };
+		61F4526EA94BBF8F6BD2B321 /* JourneyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9832906216F5B968172E082D /* JourneyActivity.swift */; };
+		6724B913A994A75F1070C534 /* PlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EFB8E7438272A1CB19AC280 /* PlannerView.swift */; };
 		6B7BF53282F1D9F145512A58 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08ABD198527C8ED1558C6B4 /* DiagnosticsView.swift */; };
-		6BBC40F27EEB19DB0495A903 /* CommuteWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF692042777F13D1F7524FD /* CommuteWidget.swift */; };
 		6F1D3253839A4EA14F485CC1 /* BusioShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFA0FB490625534F6876FD /* BusioShortcuts.swift */; };
 		72BB6A064CB752A609CFBBE6 /* BusioWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */; };
-		82978FFC0B1043AAE95744EA /* CommuteIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */; };
-		8996544778F7D12A33695C01 /* CommuteActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */; };
+		8FAF12087D7D26FA28AF3AA4 /* PlannerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D522115090623810DB59B7 /* PlannerModel.swift */; };
+		90EB6277B658E5D816D28C67 /* TripIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796CE95F3EB59DC904E659 /* TripIntents.swift */; };
+		914B0606654AD839C8A8FED0 /* JourneyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A347AD97DF7F273B6514893F /* JourneyCard.swift */; };
 		929A17BD7923257A5F24217C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38ED6537431DC975FDFD09D0 /* Assets.xcassets */; };
+		95A165BE09FA42CFA2858E67 /* JourneyAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FF97E501530B90DB3B28E4 /* JourneyAlerts.swift */; };
 		9736A48C455012CFF77E6979 /* LiveMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE606914A9A6C1218DF3420 /* LiveMapView.swift */; };
 		97A13B7CBF3618C96C760194 /* BusioKit in Frameworks */ = {isa = PBXBuildFile; productRef = F49AA9DF1D6E22C0D5FC68D9 /* BusioKit */; };
-		9E737D4C7CB9782257908B8A /* CommuteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B74967688528BDACACD579 /* CommuteView.swift */; };
 		9FCB115339AF1C1D1E0E28F0 /* Seed in Resources */ = {isa = PBXBuildFile; fileRef = 7883C0FEDD8F7177C0C7E276 /* Seed */; };
 		A42668EF54561A939D170C3F /* BusioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9D5D51C5B0D6D4ADE5C3DDB9 /* BusioKit */; };
+		A43797EB84A6BFFDC89241D1 /* TripIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796CE95F3EB59DC904E659 /* TripIntents.swift */; };
 		A7FC0013331109AF810D0881 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6513F4713E68D64D4B13F8 /* PreviewData.swift */; };
 		B062F2499E6462E14C29366F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0D94534C32061331D2D137 /* OnboardingView.swift */; };
 		B4A6CD8DAF685A9CA18D5A92 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67BFCCD0A1BEA5E9FB0B9420 /* WidgetKit.framework */; };
@@ -35,15 +38,16 @@
 		B85EDA02ADC61AD3D1821329 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC02B3CFC22369E098E245E /* LocationService.swift */; };
 		BDF85A85B97D4A89B4BA024D /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6513F4713E68D64D4B13F8 /* PreviewData.swift */; };
 		C03BCD0FDC45F4F04B0EEB72 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0197A8A56A4D200950C1B1DE /* TripDetailView.swift */; };
-		C44798035C9AAA21E2DF8E1D /* StopPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D33F1A8F5DA7EA0774E16B /* StopPickerView.swift */; };
-		C7A9302D0B3F8D0BE63B1DB2 /* CommuteAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */; };
 		D5A39F3B135F3350F63975C2 /* BusioWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D75DFF13847A860BBBC272A9 /* CommuteRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */; };
-		DAB54934E98B74573D5885AE /* CommuteIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */; };
+		D607CE351E84D5C64C2745B4 /* PlaceSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943BE75D99CE2EDC23EF156 /* PlaceSearchService.swift */; };
+		DFC1E66C7E53C9B0425579B2 /* PlaceSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE95D69DC40797262B75391 /* PlaceSearchView.swift */; };
 		E35F0621EB0C369C62DC2BC4 /* StopBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A19D473B8E6EABC396BE323 /* StopBoardView.swift */; };
 		E3BC83EEDB6EC0BF6F9E0DE1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7639E954AA6D1DCDC035BEF6 /* SwiftUI.framework */; };
+		E42CC5218626F07B89FA43F4 /* JourneyLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7404704D2B7D49627D15F80 /* JourneyLiveActivity.swift */; };
 		E8D00D4528BEF7073FEA7872 /* BusioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC61C4D83FA702B15EC8246 /* BusioApp.swift */; };
-		EC8888DE27D8D8D70F23EBAF /* CommuteAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */; };
+		F0395E035ACBD2F730F2E01D /* TripRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FF34AD3DFB685695DA5A11 /* TripRefresher.swift */; };
+		F0A74A4B415D360E68C0BA02 /* JourneyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EAFF0A988B2BFEE4BD55F8 /* JourneyDetailView.swift */; };
+		F2B2225640080FC6C37A8083 /* FavoriteTripEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB8B40C6BDB9C35F2114E33 /* FavoriteTripEditor.swift */; };
 		F3452F68C06A744D0FBC9B47 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1094130BE386948B1D43993 /* SettingsView.swift */; };
 		F63337FBC34690EEC64581A2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB36634C22E8455A22A8B006 /* AppEnvironment.swift */; };
 /* End PBXBuildFile section */
@@ -81,32 +85,36 @@
 		2AE606914A9A6C1218DF3420 /* LiveMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMapView.swift; sourceTree = "<group>"; };
 		2C6513F4713E68D64D4B13F8 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		2CC61C4D83FA702B15EC8246 /* BusioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusioApp.swift; sourceTree = "<group>"; };
-		36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteAlerts.swift; sourceTree = "<group>"; };
+		2EFB8E7438272A1CB19AC280 /* PlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerView.swift; sourceTree = "<group>"; };
+		34E94E6C0D4D676D3564475E /* TripWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWidget.swift; sourceTree = "<group>"; };
 		38ED6537431DC975FDFD09D0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		3E8DBC5A1B7502C2CDAA6E52 /* CommuteModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteModel.swift; sourceTree = "<group>"; };
-		4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteIntents.swift; sourceTree = "<group>"; };
 		5BC02B3CFC22369E098E245E /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
-		61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteRefresher.swift; sourceTree = "<group>"; };
-		63D33F1A8F5DA7EA0774E16B /* StopPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopPickerView.swift; sourceTree = "<group>"; };
-		67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteActivity.swift; sourceTree = "<group>"; };
+		65FF34AD3DFB685695DA5A11 /* TripRefresher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRefresher.swift; sourceTree = "<group>"; };
 		67BFCCD0A1BEA5E9FB0B9420 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		708A18546C8605C14476B4B7 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		71DFA0FB490625534F6876FD /* BusioShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusioShortcuts.swift; sourceTree = "<group>"; };
 		7639E954AA6D1DCDC035BEF6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7819026C87B59EF207EB540C /* BusioKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BusioKit; path = BusioKit; sourceTree = SOURCE_ROOT; };
 		7883C0FEDD8F7177C0C7E276 /* Seed */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Seed; path = Busio/Resources/Seed; sourceTree = SOURCE_ROOT; };
-		88B74967688528BDACACD579 /* CommuteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteView.swift; sourceTree = "<group>"; };
+		8943BE75D99CE2EDC23EF156 /* PlaceSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchService.swift; sourceTree = "<group>"; };
+		9832906216F5B968172E082D /* JourneyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyActivity.swift; sourceTree = "<group>"; };
+		9BB8B40C6BDB9C35F2114E33 /* FavoriteTripEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteTripEditor.swift; sourceTree = "<group>"; };
 		A044B1771A1287D85F2849C1 /* Busio.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Busio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A347AD97DF7F273B6514893F /* JourneyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyCard.swift; sourceTree = "<group>"; };
 		AAFF94BF55A8B4CE3D44B4E5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		AB36634C22E8455A22A8B006 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
-		AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteLiveActivity.swift; sourceTree = "<group>"; };
+		B8796CE95F3EB59DC904E659 /* TripIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripIntents.swift; sourceTree = "<group>"; };
 		C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BusioWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6D522115090623810DB59B7 /* PlannerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerModel.swift; sourceTree = "<group>"; };
 		CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusioWidgetsBundle.swift; sourceTree = "<group>"; };
 		D08ABD198527C8ED1558C6B4 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		D1094130BE386948B1D43993 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D271BAB0A663471A7014A995 /* TransitViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitViews.swift; sourceTree = "<group>"; };
-		DCF692042777F13D1F7524FD /* CommuteWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteWidget.swift; sourceTree = "<group>"; };
 		E0AF9124F93DA649243AC9F7 /* WalkingTimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingTimeService.swift; sourceTree = "<group>"; };
+		E1EAFF0A988B2BFEE4BD55F8 /* JourneyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyDetailView.swift; sourceTree = "<group>"; };
+		E4FF97E501530B90DB3B28E4 /* JourneyAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyAlerts.swift; sourceTree = "<group>"; };
+		F7404704D2B7D49627D15F80 /* JourneyLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLiveActivity.swift; sourceTree = "<group>"; };
+		FAE95D69DC40797262B75391 /* PlaceSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,7 +160,6 @@
 			children = (
 				D08ABD198527C8ED1558C6B4 /* DiagnosticsView.swift */,
 				D1094130BE386948B1D43993 /* SettingsView.swift */,
-				63D33F1A8F5DA7EA0774E16B /* StopPickerView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -160,10 +167,10 @@
 		161497CF63E807F146E8062C /* Features */ = {
 			isa = PBXGroup;
 			children = (
-				502C0C0D195DE83655BEDCDE /* Commute */,
 				4B9D7EEB9C7EDC84D83C0CC0 /* Lines */,
 				02DA5877182B95256EDB1EAB /* Map */,
 				78E377208B9CCA84391D2DFC /* Onboarding */,
+				36A0F2F6ED88015D022CD071 /* Planner */,
 				E09E16CDFDF25EF01E2F89CF /* Search */,
 				0D20986027ED6BA0FA8196C3 /* Settings */,
 				6A273FBE3F7A9773CA2DE7D7 /* Stops */,
@@ -179,6 +186,19 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		36A0F2F6ED88015D022CD071 /* Planner */ = {
+			isa = PBXGroup;
+			children = (
+				9BB8B40C6BDB9C35F2114E33 /* FavoriteTripEditor.swift */,
+				A347AD97DF7F273B6514893F /* JourneyCard.swift */,
+				E1EAFF0A988B2BFEE4BD55F8 /* JourneyDetailView.swift */,
+				FAE95D69DC40797262B75391 /* PlaceSearchView.swift */,
+				C6D522115090623810DB59B7 /* PlannerModel.swift */,
+				2EFB8E7438272A1CB19AC280 /* PlannerView.swift */,
+			);
+			path = Planner;
+			sourceTree = "<group>";
+		};
 		4B9D7EEB9C7EDC84D83C0CC0 /* Lines */ = {
 			isa = PBXGroup;
 			children = (
@@ -191,19 +211,10 @@
 			isa = PBXGroup;
 			children = (
 				CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */,
-				AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */,
-				DCF692042777F13D1F7524FD /* CommuteWidget.swift */,
+				F7404704D2B7D49627D15F80 /* JourneyLiveActivity.swift */,
+				34E94E6C0D4D676D3564475E /* TripWidget.swift */,
 			);
 			path = BusioWidgets;
-			sourceTree = "<group>";
-		};
-		502C0C0D195DE83655BEDCDE /* Commute */ = {
-			isa = PBXGroup;
-			children = (
-				3E8DBC5A1B7502C2CDAA6E52 /* CommuteModel.swift */,
-				88B74967688528BDACACD579 /* CommuteView.swift */,
-			);
-			path = Commute;
 			sourceTree = "<group>";
 		};
 		6A273FBE3F7A9773CA2DE7D7 /* Stops */ = {
@@ -218,7 +229,7 @@
 		6BFE6FE12F1BB61AAE5F8827 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
-				4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */,
+				B8796CE95F3EB59DC904E659 /* TripIntents.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -264,6 +275,7 @@
 			isa = PBXGroup;
 			children = (
 				5BC02B3CFC22369E098E245E /* LocationService.swift */,
+				8943BE75D99CE2EDC23EF156 /* PlaceSearchService.swift */,
 				E0AF9124F93DA649243AC9F7 /* WalkingTimeService.swift */,
 			);
 			path = Services;
@@ -323,10 +335,10 @@
 			children = (
 				6BFE6FE12F1BB61AAE5F8827 /* Intents */,
 				AB36634C22E8455A22A8B006 /* AppEnvironment.swift */,
-				67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */,
-				36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */,
-				61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */,
+				9832906216F5B968172E082D /* JourneyActivity.swift */,
+				E4FF97E501530B90DB3B28E4 /* JourneyAlerts.swift */,
 				2C6513F4713E68D64D4B13F8 /* PreviewData.swift */,
+				65FF34AD3DFB685695DA5A11 /* TripRefresher.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -438,24 +450,28 @@
 				52A1BEC0370B9FEC4B441455 /* AppModel.swift in Sources */,
 				E8D00D4528BEF7073FEA7872 /* BusioApp.swift in Sources */,
 				6F1D3253839A4EA14F485CC1 /* BusioShortcuts.swift in Sources */,
-				8996544778F7D12A33695C01 /* CommuteActivity.swift in Sources */,
-				EC8888DE27D8D8D70F23EBAF /* CommuteAlerts.swift in Sources */,
-				82978FFC0B1043AAE95744EA /* CommuteIntents.swift in Sources */,
-				629A43A6C3BEC4D1312B41FF /* CommuteModel.swift in Sources */,
-				345D1F2722543C3D0C9D7D42 /* CommuteRefresher.swift in Sources */,
-				9E737D4C7CB9782257908B8A /* CommuteView.swift in Sources */,
 				6B7BF53282F1D9F145512A58 /* DiagnosticsView.swift in Sources */,
+				F2B2225640080FC6C37A8083 /* FavoriteTripEditor.swift in Sources */,
+				398E1E1EEE52B8E9D9E92201 /* JourneyActivity.swift in Sources */,
+				95A165BE09FA42CFA2858E67 /* JourneyAlerts.swift in Sources */,
+				914B0606654AD839C8A8FED0 /* JourneyCard.swift in Sources */,
+				F0A74A4B415D360E68C0BA02 /* JourneyDetailView.swift in Sources */,
 				5630838E7ADD90002FC9299A /* LinesView.swift in Sources */,
 				9736A48C455012CFF77E6979 /* LiveMapView.swift in Sources */,
 				B85EDA02ADC61AD3D1821329 /* LocationService.swift in Sources */,
 				B062F2499E6462E14C29366F /* OnboardingView.swift in Sources */,
+				D607CE351E84D5C64C2745B4 /* PlaceSearchService.swift in Sources */,
+				DFC1E66C7E53C9B0425579B2 /* PlaceSearchView.swift in Sources */,
+				8FAF12087D7D26FA28AF3AA4 /* PlannerModel.swift in Sources */,
+				6724B913A994A75F1070C534 /* PlannerView.swift in Sources */,
 				A7FC0013331109AF810D0881 /* PreviewData.swift in Sources */,
 				4E0660A233DCBC814466995B /* SearchView.swift in Sources */,
 				F3452F68C06A744D0FBC9B47 /* SettingsView.swift in Sources */,
 				E35F0621EB0C369C62DC2BC4 /* StopBoardView.swift in Sources */,
-				C44798035C9AAA21E2DF8E1D /* StopPickerView.swift in Sources */,
 				58F35EACBC18687E15A6D3FB /* TransitViews.swift in Sources */,
 				C03BCD0FDC45F4F04B0EEB72 /* TripDetailView.swift in Sources */,
+				A43797EB84A6BFFDC89241D1 /* TripIntents.swift in Sources */,
+				F0395E035ACBD2F730F2E01D /* TripRefresher.swift in Sources */,
 				B583CFF94802B106B7C7FDF7 /* WalkingTimeService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -466,13 +482,13 @@
 			files = (
 				F63337FBC34690EEC64581A2 /* AppEnvironment.swift in Sources */,
 				72BB6A064CB752A609CFBBE6 /* BusioWidgetsBundle.swift in Sources */,
-				5F9AF6ACE85C62C2584F3CB5 /* CommuteActivity.swift in Sources */,
-				C7A9302D0B3F8D0BE63B1DB2 /* CommuteAlerts.swift in Sources */,
-				DAB54934E98B74573D5885AE /* CommuteIntents.swift in Sources */,
-				2D4553D3DD961B6EC223AB0B /* CommuteLiveActivity.swift in Sources */,
-				D75DFF13847A860BBBC272A9 /* CommuteRefresher.swift in Sources */,
-				6BBC40F27EEB19DB0495A903 /* CommuteWidget.swift in Sources */,
+				61F4526EA94BBF8F6BD2B321 /* JourneyActivity.swift in Sources */,
+				3E44A6D6705FACCD33ED599F /* JourneyAlerts.swift in Sources */,
+				E42CC5218626F07B89FA43F4 /* JourneyLiveActivity.swift in Sources */,
 				BDF85A85B97D4A89B4BA024D /* PreviewData.swift in Sources */,
+				90EB6277B658E5D816D28C67 /* TripIntents.swift in Sources */,
+				0FEE969C5D0BD412379F25F0 /* TripRefresher.swift in Sources */,
+				0CDFD2A8E9DA1D89800F1997 /* TripWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

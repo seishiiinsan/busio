@@ -52,6 +52,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         if let coordinate {
             lastCoordinate = coordinate
             lastFix = Date()
+            LocationMemory.store(coordinate)
             return coordinate
         }
         if let location = manager.location {

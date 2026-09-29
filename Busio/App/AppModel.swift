@@ -8,10 +8,12 @@ import BusioKit
 @MainActor
 final class AppModel {
     enum Tab: String, Hashable {
-        case commute, map, lines, search
+        case planner, map, lines, search
     }
 
-    var selectedTab: Tab = .commute
+    var selectedTab: Tab = .planner
+    /// Trajet favori à ouvrir dans l'onglet Itinéraire (lien, widget).
+    var pendingFavoriteID: UUID?
     /// Écran à ouvrir au lancement (captures automatiques, DEBUG).
     var demoScreen: String?
     var showOnboarding: Bool
@@ -35,12 +37,17 @@ final class AppModel {
     init() {
         var preferences = AppGroup.store.loadPreferences()
         #if DEBUG
-        // Captures d'écran automatiques (CI) : `-demo` configure un trajet, `-tab map` ouvre un onglet.
+        // Captures d'écran automatiques (CI) : `-demo` crée des favoris, `-tab map` ouvre un onglet.
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-demo") {
-            preferences.commute.home = PlaceRef(areaID: "839690006", name: "Gares Castres", coordinate: Coordinate(latitude: 43.5984, longitude: 2.2303))
-            preferences.commute.work = PlaceRef(areaID: "843740007", name: "Gares Mazamet", coordinate: Coordinate(latitude: 43.4982, longitude: 2.3740))
-            preferences.favorites = [PlaceRef(areaID: "836670001", name: "Gare SNCF", coordinate: Coordinate(latitude: 43.6003, longitude: 2.2352))]
+            let archipel = Place(name: "Archipel", subtitle: "Arrêt de bus", coordinate: Coordinate(latitude: 43.622528, longitude: 2.259509), kind: .stop, stopAreaID: "810270004")
+            let mazamet = Place(name: "Gares Mazamet", subtitle: "Arrêt de bus", coordinate: Coordinate(latitude: 43.4982, longitude: 2.3740), kind: .stop, stopAreaID: "843740007")
+            let morning = FavoriteTrip(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, from: archipel, to: mazamet, arriveByMinute: 9 * 60)
+            var evening = morning.reversed
+            evening.id = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
+            evening.arriveByMinute = 17 * 60 + 30
+            preferences.favoriteTrips = [morning, evening]
+            preferences.favorites = [PlaceRef(areaID: "826710003", name: "Gare SNCF", coordinate: Coordinate(latitude: 43.5991, longitude: 2.2319))]
             preferences.hasCompletedOnboarding = true
             AppGroup.store.save(preferences)
         }
@@ -54,6 +61,7 @@ final class AppModel {
         }
         if let index = arguments.firstIndex(of: "-screen"), arguments.indices.contains(index + 1) {
             demoScreen = arguments[index + 1]
+            if demoScreen == "results" || demoScreen == "detail" { pendingFavoriteID = preferences.favoriteTrips.first?.id }
         }
         #endif
     }
@@ -110,46 +118,47 @@ final class AppModel {
 
     // MARK: Liens
 
+    /// busio://planner, busio://map, busio://trip/<uuid>
     func handle(_ url: URL) {
         guard url.scheme == "busio" else { return }
         switch url.host() {
-        case "setup": showOnboarding = true
         case "map": selectedTab = .map
-        default: selectedTab = .commute
+        case "trip":
+            selectedTab = .planner
+            pendingFavoriteID = UUID(uuidString: url.lastPathComponent)
+        default: selectedTab = .planner
         }
     }
 }
 
-/// Rafraîchissement en arrière-plan (au bon vouloir d'iOS) autour des heures de trajet.
+/// Rafraîchissement en arrière-plan (au bon vouloir d'iOS) avant les heures d'arrivée des favoris.
 enum BackgroundRefresh {
     static var identifier: String { (Bundle.main.bundleIdentifier ?? "busio") + ".refresh" }
 
     static func schedule(preferences: UserPreferences, now: Date = Date()) {
-        guard preferences.commute.isConfigured else { return }
+        guard !preferences.favoriteTrips.isEmpty || AppGroup.store.loadFollowed() != nil else { return }
         let request = BGAppRefreshTaskRequest(identifier: identifier)
-        request.earliestBeginDate = nextRun(settings: preferences.commute, now: now)
+        request.earliestBeginDate = nextRun(favorites: preferences.favoriteTrips, now: now)
         try? BGTaskScheduler.shared.submit(request)
     }
 
-    /// Toutes les 10 min pendant les créneaux de trajet, sinon 45 min avant le prochain.
-    static func nextRun(settings: CommuteSettings, now: Date) -> Date {
+    /// Toutes les 10 min dans les 2 h précédant une heure d'arrivée, sinon juste avant la prochaine fenêtre.
+    static func nextRun(favorites: [FavoriteTrip], now: Date) -> Date {
+        var windows: [(start: Date, end: Date)] = []
         for offset in 0..<8 {
-            guard let day = TransitClock.calendar.date(byAdding: .day, value: offset, to: now), settings.isWorkday(day) else { continue }
-            let windows = [
-                (CommuteSettings.date(minute: settings.arriveByMinute, on: day).addingTimeInterval(-100 * 60),
-                 CommuteSettings.date(minute: settings.arriveByMinute, on: day)),
-                (CommuteSettings.date(minute: settings.leaveWorkMinute, on: day).addingTimeInterval(-45 * 60),
-                 CommuteSettings.date(minute: settings.leaveWorkMinute, on: day).addingTimeInterval(90 * 60)),
-            ]
-            for (start, end) in windows where end > now {
-                return start > now ? start : now.addingTimeInterval(10 * 60)
+            guard let day = TransitClock.calendar.date(byAdding: .day, value: offset, to: now) else { continue }
+            for favorite in favorites where favorite.appliesArrivalTime(on: day) {
+                let deadline = FavoriteTrip.date(minute: favorite.arriveByMinute ?? 0, on: day)
+                windows.append((deadline.addingTimeInterval(-2 * 3600), deadline))
             }
         }
-        return now.addingTimeInterval(6 * 3600)
+        let upcoming = windows.filter { $0.end > now }.sorted { $0.start < $1.start }
+        guard let next = upcoming.first else { return now.addingTimeInterval(3 * 3600) }
+        return next.start > now ? next.start : now.addingTimeInterval(10 * 60)
     }
 
     static func run() async {
-        _ = try? await CommuteRefresher.refresh(options: .all)
+        await TripRefresher.refreshAll()
         schedule(preferences: AppGroup.store.loadPreferences())
     }
 }

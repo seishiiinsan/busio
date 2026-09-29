@@ -55,14 +55,15 @@ jobs:
             sleep "${3:-18}"
             xcrun simctl io "$UDID" screenshot "docs/screenshots/$2.png"
           }
-          shoot commute trajet 25
+          rm -f docs/screenshots/*.png
+          shoot planner itineraire 25
+          shoot planner itineraire-resultats 30 results
+          shoot planner itineraire-detail 30 detail
           shoot map carte
-          shoot lines lignes
           shoot lines ligne-10 20 line
-          shoot search arrets
           shoot search arret-gare-sncf 20 stop
           xcrun simctl ui "$UDID" appearance dark
-          shoot commute trajet-sombre
+          shoot planner itineraire-sombre 30 results
           ls -la docs/screenshots
 
       - name: Commit

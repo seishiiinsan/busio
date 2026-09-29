@@ -1,0 +1,20 @@
+# Xcode / SwiftPM
+.DS_Store
+xcuserdata/
+DerivedData/
+*.xcuserstate
+.build/
+.swiftpm/
+BusioKit/Package.resolved
+build/
+
+# Projet généré par XcodeGen (make project)
+Busio.xcodeproj/
+
+# Réglages locaux (équipe de signature)
+Config/Local.xcconfig
+
+# Sondes
+Tools/Probe/probe-out/
+Tools/Probe/node_modules/
+Tools/Probe/package*.json

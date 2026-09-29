@@ -428,7 +428,8 @@ private struct FavoriteTripCard: View {
                 HStack(spacing: 10) {
                     JourneyLegsView(journey: journey)
                     Spacer()
-                    Text("\(TimeText.clock(journey.departure)) → \(TimeText.clock(journey.arrival))")
+                    let day = TimeText.dayLabel(journey.departure)
+                    Text("\(day == "aujourd'hui" ? "" : day + " ")\(TimeText.clock(journey.departure)) → \(TimeText.clock(journey.arrival))")
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                     QualityTag(quality: journey.quality, compact: true)

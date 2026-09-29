@@ -11,7 +11,13 @@ enum TripRefresher {
         let preferences = AppGroup.store.loadPreferences()
         let request = favorite.request(options: preferences.routing, at: now, currentLocation: LocationMemory.last)
         let previous = AppGroup.store.loadSnapshot(favoriteID: favorite.id)
-        let snapshot = try await Transit.service.snapshot(for: request, favoriteID: favorite.id, title: favorite.displayName, now: now)
+        var snapshot = try await Transit.service.snapshot(for: request, favoriteID: favorite.id, title: favorite.displayName, now: now)
+        // Plus de bus ce soir : le trajet de demain matin plutôt qu'un widget vide.
+        if snapshot.journeys.isEmpty, let later = favorite.laterRequest(than: request, now: now),
+           let fallback = try? await Transit.service.snapshot(for: later, favoriteID: favorite.id, title: favorite.displayName, now: now),
+           !fallback.journeys.isEmpty {
+            snapshot = fallback
+        }
         AppGroup.store.save(snapshot)
         if reloadWidgets, previous.map(signature) != signature(snapshot) {
             WidgetCenter.shared.reloadAllTimelines()

@@ -82,6 +82,21 @@ public enum TimeConstraint: Codable, Hashable, Sendable {
     case arriveBy(Date)
 }
 
+extension TimeConstraint {
+    /// Reprise du service (4 h 30) après une recherche sans résultat ; rien pour « arriver avant ».
+    public func nextServiceStart(now: Date) -> Date? {
+        let base: Date
+        switch self {
+        case .now: base = now
+        case .departAt(let date): base = date
+        case .arriveBy: return nil
+        }
+        let calendar = TransitClock.calendar
+        let sameDay = calendar.date(bySettingHour: 4, minute: 30, second: 0, of: base) ?? base
+        return sameDay > base ? sameDay : calendar.date(byAdding: .day, value: 1, to: sameDay)
+    }
+}
+
 /// Préférences de calcul.
 public struct RoutingOptions: Codable, Hashable, Sendable {
     public enum Preference: String, Codable, CaseIterable, Sendable, Identifiable {

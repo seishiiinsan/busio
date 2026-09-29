@@ -154,7 +154,7 @@ final class PlannerModel {
             let found = try await app.service.planJourney(request)
             result = found
             errorMessage = nil
-            if found.journeys.isEmpty, let start = Self.nextServiceStart(after: request.time) {
+            if found.journeys.isEmpty, let start = request.time.nextServiceStart(now: Date()) {
                 var later = request
                 later.time = .departAt(start)
                 laterResult = try? await app.service.planJourney(later)
@@ -171,19 +171,6 @@ final class PlannerModel {
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
-    }
-
-    /// Reprise du service (4 h 30) après une recherche sans résultat ; rien pour « arriver avant ».
-    static func nextServiceStart(after time: TimeConstraint, now: Date = Date()) -> Date? {
-        let base: Date
-        switch time {
-        case .now: base = now
-        case .departAt(let date): base = date
-        case .arriveBy: return nil
-        }
-        let calendar = TransitClock.calendar
-        let sameDay = calendar.date(bySettingHour: 4, minute: 30, second: 0, of: base) ?? base
-        return sameDay > base ? sameDay : calendar.date(byAdding: .day, value: 1, to: sameDay)
     }
 
     /// Instantané de la recherche en cours (Live Activity).

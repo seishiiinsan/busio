@@ -72,4 +72,34 @@ final class FavoriteTripTests: XCTestCase {
         XCTAssertTrue(prefs.hasCompletedOnboarding)
         XCTAssertTrue(prefs.favoriteTrips.isEmpty)
     }
+
+    func testAfterLastBusFavoriteLooksAtNextMorning() async throws {
+        let trip = archipelToMazamet
+        // Mardi 20:00 → mercredi 9:00 ; vendredi 20:00 → lundi 9:00.
+        XCTAssertEqual(trip.nextArrivalDeadline(after: TestData.date(2026, 9, 29, 20, 0)), TestData.date(2026, 9, 30, 9, 0))
+        XCTAssertEqual(trip.nextArrivalDeadline(after: TestData.date(2026, 10, 2, 20, 0)), TestData.date(2026, 10, 5, 9, 0))
+        XCTAssertEqual(trip.nextArrivalDeadline(after: TestData.date(2026, 9, 29, 7, 0)), TestData.date(2026, 9, 29, 9, 0))
+        // Sans heure d'arrivée : reprise du service le lendemain.
+        XCTAssertEqual(TimeConstraint.now.nextServiceStart(now: TestData.date(2026, 9, 29, 21, 0)), TestData.date(2026, 9, 30, 4, 30))
+        XCTAssertEqual(TimeConstraint.now.nextServiceStart(now: TestData.date(2026, 9, 30, 1, 0)), TestData.date(2026, 9, 30, 4, 30))
+        XCTAssertNil(TimeConstraint.arriveBy(TestData.date(2026, 9, 30, 9, 0)).nextServiceStart(now: TestData.date(2026, 9, 29, 21, 0)))
+
+        // Vraies données : plus rien mardi soir, le repli trouve le trajet du lendemain arrivant avant 9:00.
+        let cache = FileManager.default.temporaryDirectory.appendingPathComponent("busio-fav-\(UUID().uuidString)")
+        let service = TransitService(configuration: .init(
+            cacheDirectory: cache, seedDirectory: TestData.seed,
+            client: ZenbusClient(baseURL: URL(string: "http://127.0.0.1:9")!),
+            gtfsURL: URL(string: "http://127.0.0.1:9/g.zip")!
+        ))
+        let now = TestData.date(2026, 9, 29, 20, 0)
+        let request = trip.request(options: RoutingOptions(), at: now)
+        XCTAssertEqual(request.time, .now)
+        let tonight = try await service.snapshot(for: request, favoriteID: trip.id, title: trip.displayName, now: now)
+        XCTAssertTrue(tonight.journeys.isEmpty)
+        let later = try XCTUnwrap(trip.laterRequest(than: request, now: now))
+        let tomorrow = try await service.snapshot(for: later, favoriteID: trip.id, title: trip.displayName, now: now)
+        let next = try XCTUnwrap(tomorrow.next(at: now))
+        XCTAssertLessThanOrEqual(next.arrival, TestData.date(2026, 9, 30, 9, 0))
+        XCTAssertGreaterThan(next.departure, TestData.date(2026, 9, 30, 5, 0))
+    }
 }

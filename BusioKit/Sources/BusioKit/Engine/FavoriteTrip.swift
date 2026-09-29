@@ -45,6 +45,30 @@ public struct FavoriteTrip: Codable, Hashable, Sendable, Identifiable {
         return deadline > now ? deadline : nil
     }
 
+    /// Prochaine heure d'arrivée visée : aujourd'hui si elle n'est pas passée, sinon l'un des jours suivants.
+    public func nextArrivalDeadline(after now: Date) -> Date? {
+        guard let arriveByMinute else { return nil }
+        for offset in 0..<8 {
+            guard let day = TransitClock.calendar.date(byAdding: .day, value: offset, to: now), appliesArrivalTime(on: day) else { continue }
+            let deadline = Self.date(minute: arriveByMinute, on: day)
+            if deadline > now { return deadline }
+        }
+        return nil
+    }
+
+    /// Recherche de repli quand plus aucun bus ne circule : prochaine heure d'arrivée visée, sinon reprise du service.
+    public func laterRequest(than request: JourneyRequest, now: Date) -> JourneyRequest? {
+        var later = request
+        if let deadline = nextArrivalDeadline(after: now) {
+            later.time = .arriveBy(deadline)
+        } else if let start = request.time.nextServiceStart(now: now) {
+            later.time = .departAt(start)
+        } else {
+            return nil
+        }
+        return later
+    }
+
     /// Recherche correspondant au favori à cet instant.
     public func request(options: RoutingOptions, at now: Date, currentLocation: Coordinate? = nil) -> JourneyRequest {
         var from = self.from

@@ -92,6 +92,14 @@ enum TimeText {
         let minutes = Int((interval / 60).rounded())
         return minutes < 60 ? "\(minutes) min" : "\(minutes / 60) h \(String(format: "%02d", minutes % 60))"
     }
+
+    /// « aujourd'hui », « demain », « lundi 5 octobre »
+    static func dayLabel(_ date: Date, now: Date = Date()) -> String {
+        let calendar = TransitClock.calendar
+        if calendar.isDate(date, inSameDayAs: now) { return "aujourd'hui" }
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(date, inSameDayAs: tomorrow) { return "demain" }
+        return date.formatted(Date.FormatStyle(locale: Locale(identifier: "fr_FR"), calendar: calendar, timeZone: TransitClock.timeZone).weekday(.wide).day().month(.wide))
+    }
 }
 
 extension TimingQuality {

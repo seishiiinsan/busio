@@ -29,6 +29,8 @@ final class PlannerModel {
     var favoriteID: UUID?
 
     private(set) var result: JourneySearchResult?
+    /// Plus de bus avant la fin du service : premiers départs du lendemain.
+    private(set) var laterResult: JourneySearchResult?
     private(set) var isSearching = false
     private(set) var errorMessage: String?
 
@@ -63,6 +65,7 @@ final class PlannerModel {
         to = nil
         from = nil
         result = nil
+        laterResult = nil
         errorMessage = nil
         favoriteID = nil
         timeMode = .now
@@ -101,15 +104,8 @@ final class PlannerModel {
     /// « Ma position → Gares Mazamet · arrivée avant 9:00 demain »
     private func summary(now: Date = Date()) -> String {
         var text = "\(from?.name ?? "Ma position") → \(to?.name ?? "…")"
-        let calendar = TransitClock.calendar
-        let day: String
-        if calendar.isDate(date, inSameDayAs: now) {
-            day = ""
-        } else if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(date, inSameDayAs: tomorrow) {
-            day = " demain"
-        } else {
-            day = " " + date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR")))
-        }
+        let label = TimeText.dayLabel(date, now: now)
+        let day = label == "aujourd'hui" ? "" : " " + label
         switch timeMode {
         case .now: text += " · maintenant"
         case .departAt: text += " · départ \(TimeText.clock(date))\(day)"
@@ -158,6 +154,13 @@ final class PlannerModel {
             let found = try await app.service.planJourney(request)
             result = found
             errorMessage = nil
+            if found.journeys.isEmpty, let start = Self.nextServiceStart(after: request.time) {
+                var later = request
+                later.time = .departAt(start)
+                laterResult = try? await app.service.planJourney(later)
+            } else {
+                laterResult = nil
+            }
             if let network = app.network {
                 AppGroup.store.save(TripSnapshot(favoriteID: nil, title: title, result: found, network: network))
             }
@@ -168,6 +171,19 @@ final class PlannerModel {
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
+    }
+
+    /// Reprise du service (4 h 30) après une recherche sans résultat ; rien pour « arriver avant ».
+    static func nextServiceStart(after time: TimeConstraint, now: Date = Date()) -> Date? {
+        let base: Date
+        switch time {
+        case .now: base = now
+        case .departAt(let date): base = date
+        case .arriveBy: return nil
+        }
+        let calendar = TransitClock.calendar
+        let sameDay = calendar.date(bySettingHour: 4, minute: 30, second: 0, of: base) ?? base
+        return sameDay > base ? sameDay : calendar.date(byAdding: .day, value: 1, to: sameDay)
     }
 
     /// Instantané de la recherche en cours (Live Activity).

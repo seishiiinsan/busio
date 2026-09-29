@@ -134,6 +134,14 @@ struct PlannerView: View {
         app.pendingFavoriteID = nil
         path = NavigationPath()
         select(favorite)
+        #if DEBUG
+        // Captures : trajet de demain matin, avec correspondance, quelle que soit l'heure.
+        if app.demoScreen == "followed", let minute = favorite.arriveByMinute,
+           let tomorrow = TransitClock.calendar.date(byAdding: .day, value: 1, to: Date()) {
+            model.timeMode = .arriveBy
+            model.date = FavoriteTrip.date(minute: minute, on: tomorrow)
+        }
+        #endif
     }
 
     // MARK: Résultats
@@ -147,7 +155,13 @@ struct PlannerView: View {
                     .padding(12)
                     .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            if result.journeys.isEmpty {
+            if result.journeys.isEmpty, let later = model.laterResult, let first = later.journeys.first {
+                Label("Plus de bus pour ce trajet d'ici là.", systemImage: "moon.zzz.fill")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text("Premiers départs \(TimeText.dayLabel(first.departure))").font(.title3.bold())
+                ForEach(later.journeys.prefix(3)) { journey in card(journey, highlight: nil) }
+            } else if result.journeys.isEmpty {
                 ContentUnavailableView("Aucun itinéraire", systemImage: "point.topleft.down.to.point.bottomright.curvepath",
                                        description: Text("Pas de bus dans les prochaines heures, ou aucun arrêt à moins de \(Int(app.preferences.routing.maxWalkDistance)) m. Tu peux augmenter la marche maximale dans les réglages."))
             } else if case .arriveBy(let deadline) = result.request.time {

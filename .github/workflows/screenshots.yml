@@ -18,6 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Réseau Zenbus
+        continue-on-error: true
+        run: |
+          curl -sS -o /dev/null -w "HTTP %{http_code} · TLS ok · %{time_total}s\n" "https://zenbus.net/publicapp/static-data?alias=castres"
+          nscurl --ats-diagnostics "https://zenbus.net/publicapp/static-data?alias=castres" | grep -E "^(Default ATS|Result|Reason)|PASS|FAIL" | head -20
+
       - name: Simulateur
         id: sim
         run: |

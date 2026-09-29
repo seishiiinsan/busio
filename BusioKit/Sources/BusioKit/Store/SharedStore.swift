@@ -15,6 +15,13 @@ public struct UserPreferences: Codable, Hashable, Sendable {
     /// Démarre la Live Activity d'un trajet favori quand son bus approche.
     public var autoLiveActivity: Bool
     public var hasCompletedOnboarding: Bool
+    /// Lieux nommés (« au boulot », « à la maison » dans la recherche).
+    public var home: Place?
+    public var work: Place?
+    /// Itinéraire suivi : alerte avant la descente (GPS).
+    public var alightAlerts: Bool
+    /// Itinéraire suivi : correspondance menacée, plan B.
+    public var transferAlerts: Bool
 
     public init(
         favoriteTrips: [FavoriteTrip] = [],
@@ -25,7 +32,11 @@ public struct UserPreferences: Codable, Hashable, Sendable {
         delayAlerts: Bool = true,
         delayThresholdMinutes: Int = 3,
         autoLiveActivity: Bool = true,
-        hasCompletedOnboarding: Bool = false
+        hasCompletedOnboarding: Bool = false,
+        home: Place? = nil,
+        work: Place? = nil,
+        alightAlerts: Bool = true,
+        transferAlerts: Bool = true
     ) {
         self.favoriteTrips = favoriteTrips
         self.favorites = favorites
@@ -36,6 +47,10 @@ public struct UserPreferences: Codable, Hashable, Sendable {
         self.delayThresholdMinutes = delayThresholdMinutes
         self.autoLiveActivity = autoLiveActivity
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.home = home
+        self.work = work
+        self.alightAlerts = alightAlerts
+        self.transferAlerts = transferAlerts
     }
 
     public init(from decoder: Decoder) throws {
@@ -51,6 +66,10 @@ public struct UserPreferences: Codable, Hashable, Sendable {
         delayThresholdMinutes = (try? c.decodeIfPresent(Int.self, forKey: .delayThresholdMinutes)) ?? d.delayThresholdMinutes
         autoLiveActivity = (try? c.decodeIfPresent(Bool.self, forKey: .autoLiveActivity)) ?? d.autoLiveActivity
         hasCompletedOnboarding = (try? c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding)) ?? d.hasCompletedOnboarding
+        home = try? c.decodeIfPresent(Place.self, forKey: .home)
+        work = try? c.decodeIfPresent(Place.self, forKey: .work)
+        alightAlerts = (try? c.decodeIfPresent(Bool.self, forKey: .alightAlerts)) ?? d.alightAlerts
+        transferAlerts = (try? c.decodeIfPresent(Bool.self, forKey: .transferAlerts)) ?? d.transferAlerts
     }
 
     /// Mémorise un lieu recherché (sans doublon, 8 au plus).
@@ -127,13 +146,22 @@ public struct TripSnapshot: Codable, Hashable, Sendable {
     }
 }
 
-/// Itinéraire suivi en Live Activity (pour le recalculer à chaque actualisation).
+/// Itinéraire suivi (Live Activity, GPS, correspondances), actualisé en continu.
 public struct FollowedJourney: Codable, Hashable, Sendable {
     public let request: JourneyRequest
-    public let journeyID: String
-    public let firstTripID: String?
+    public private(set) var journeyID: String
+    public private(set) var firstTripID: String?
     public let title: String
     public let startedAt: Date
+    /// Itinéraire exact suivi (mêmes bus), horaires à jour.
+    public var journey: PlannedJourney?
+    /// Problème en cours (correspondance menacée, bus supprimé) et plan B proposé.
+    public var issue: JourneyIssue?
+    public var planB: PlannedJourney?
+    /// Clés des alertes déjà envoyées.
+    public var alerted: Set<String>?
+    /// Où l'on en est d'après le GPS.
+    public var progress: JourneyTracker.Progress?
 
     public init(request: JourneyRequest, journey: PlannedJourney, title: String, startedAt: Date = Date()) {
         self.request = request
@@ -141,6 +169,20 @@ public struct FollowedJourney: Codable, Hashable, Sendable {
         firstTripID = journey.firstRide?.tripID
         self.title = title
         self.startedAt = startedAt
+        self.journey = journey
+    }
+
+    /// Remplace l'itinéraire (actualisation ou passage au plan B).
+    public mutating func replace(with journey: PlannedJourney) {
+        self.journey = journey
+        journeyID = journey.id
+        firstTripID = journey.firstRide?.tripID
+    }
+
+    /// Fini depuis un moment : on arrête de suivre.
+    public func isOver(at now: Date) -> Bool {
+        if let journey { return journey.arrival.addingTimeInterval(15 * 60) < now }
+        return startedAt.addingTimeInterval(4 * 3600) < now
     }
 }
 

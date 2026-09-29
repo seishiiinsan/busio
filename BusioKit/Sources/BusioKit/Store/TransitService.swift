@@ -375,6 +375,55 @@ public actor TransitService {
         )
     }
 
+    /// Même itinéraire (mêmes bus), horaires actualisés : retards, suppressions, position des bus.
+    public func refresh(_ journey: PlannedJourney, now: Date = Date()) async throws -> (journey: PlannedJourney, status: FeedStatus) {
+        let network = try await currentNetwork()
+        let rides = journey.rides
+        guard !rides.isEmpty else { return (journey, FeedStatus(kind: .live, detail: nil, lastLiveUpdate: lastLiveSuccess)) }
+        let lineIDs = Set(rides.map(\.lineID))
+        let itineraries = network.itineraries.filter { lineIDs.contains($0.lineID) }
+        let stopIDs = Set(rides.flatMap { [$0.board.stopID, $0.alight.stopID] })
+        let start = min(journey.departure, now).addingTimeInterval(-3600)
+        let end = max(journey.arrival, now).addingTimeInterval(3600)
+        let resolved = await resolveTrips(itineraries: itineraries, stopIDs: stopIDs, network: network, from: start, to: end, now: now)
+        return (journey.updated(with: resolved.trips), resolved.status)
+    }
+
+    /// Plan B quand une correspondance saute ou qu'un bus est supprimé : repart de là où l'on sera
+    /// (arrêt de correspondance, ou point de départ si c'est le premier bus) vers la même destination.
+    /// Renvoie l'itinéraire complet : étapes déjà faites + nouvelle fin.
+    public func alternative(for journey: PlannedJourney, issue: JourneyIssue, request: JourneyRequest, now: Date = Date()) async throws -> PlannedJourney? {
+        let network = try await currentNetwork()
+        let rides = journey.rides
+        guard rides.indices.contains(issue.rideIndex) else { return nil }
+        let threatened = rides[issue.rideIndex]
+
+        let origin: Place
+        var departAfter: Date
+        if issue.rideIndex == 0 {
+            origin = request.from
+            departAfter = max(now, journey.departure)
+        } else {
+            let previous = rides[issue.rideIndex - 1]
+            let stop = network.stop(previous.alight.stopID)
+            let area = network.area(containingStop: previous.alight.stopID)
+            origin = Place(id: "stop:\(previous.alight.stopID)", name: stop?.name ?? area?.name ?? "Correspondance",
+                           coordinate: stop?.coordinate ?? area?.coordinate ?? request.from.coordinate,
+                           kind: .stop, stopAreaID: area?.id)
+            departAfter = max(now, previous.arrival.addingTimeInterval(60))
+        }
+        // Correspondance juste : le plan B part après le bus menacé.
+        if issue.kind == .tightTransfer { departAfter = max(departAfter, threatened.departure.addingTimeInterval(1)) }
+
+        var options = request.options
+        options.preference = .fastest
+        let result = try await planJourney(JourneyRequest(from: origin, to: request.to, time: .departAt(departAfter), options: options), now: now)
+        guard let best = result.journeys
+            .filter({ candidate in !candidate.isCancelled && !candidate.rides.contains { $0.isSameRide(as: threatened) } })
+            .min(by: { $0.arrival < $1.arrival }) else { return nil }
+        return PlannedJourney(legs: journey.legs(before: issue.rideIndex) + best.legs)
+    }
+
     /// Prochains départs d'un arrêt.
     public func board(for area: StopArea, now: Date = Date(), horizon: TimeInterval = 3 * 3600) async throws -> StopBoard {
         let network = try await currentNetwork()

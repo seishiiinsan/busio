@@ -200,6 +200,24 @@ public struct GTFSSchedule: Sendable {
         return Array(result.values)
     }
 
+    /// Toutes les courses circulant (au moins un passage) entre `from` et `to`.
+    public func trips(from: Date, to: Date, network: Network) -> [TripInstance] {
+        var result: [TripInstance] = []
+        var day = ServiceDay(containing: from).previous
+        let last = ServiceDay(containing: to)
+        while day <= last {
+            let lower = day.seconds(of: from), upper = day.seconds(of: to)
+            for trip in trips where services[trip.serviceID]?.isActive(on: day) == true {
+                guard let first = trip.calls.first.flatMap({ $0.departure ?? $0.arrival }),
+                      let end = trip.calls.last.flatMap({ $0.arrival ?? $0.departure }),
+                      end >= lower, first <= upper else { continue }
+                result.append(instance(trip, day: day, network: network))
+            }
+            day = day.next
+        }
+        return result
+    }
+
     /// Toutes les courses d'une ligne pour un jour.
     public func trips(ofLine lineID: String, on day: ServiceDay, network: Network) -> [TripInstance] {
         trips.filter { $0.lineID == lineID && services[$0.serviceID]?.isActive(on: day) == true }

@@ -271,9 +271,21 @@ public actor TransitService {
 
     /// Courses des sens demandés sur la fenêtre, Zenbus d'abord, GTFS en secours.
     func resolveTrips(itineraries: [Itinerary], stopIDs: Set<String>, network: Network, now: Date, horizon: TimeInterval) async -> Resolved {
-        let ids = Set(itineraries.map(\.id))
-        let entries = await liveEntries(for: ids, network: network, now: now)
-        let days = Set([ServiceDay(containing: now).previous, ServiceDay(containing: now), ServiceDay(containing: now.addingTimeInterval(horizon))])
+        await resolveTrips(itineraries: itineraries, stopIDs: stopIDs, network: network, from: now, to: now.addingTimeInterval(horizon), now: now)
+    }
+
+    /// Courses circulant entre `start` et `end`. `stopIDs == nil` : tout le réseau.
+    func resolveTrips(itineraries: [Itinerary], stopIDs: Set<String>?, network: Network, from start: Date, to end: Date, now: Date) async -> Resolved {
+        let today = ServiceDay(containing: now)
+        var days: Set<ServiceDay> = [ServiceDay(containing: start).previous]
+        var day = ServiceDay(containing: start)
+        while day <= ServiceDay(containing: end) {
+            days.insert(day)
+            day = day.next
+        }
+        // Zenbus ne publie que la journée en cours.
+        let wantsLive = days.contains(today) || days.contains(today.previous)
+        let entries = wantsLive ? await liveEntries(for: Set(itineraries.map(\.id)), network: network, now: now) : [:]
 
         var zenbusTrips: [TripInstance] = []
         var coverage: Set<String> = []
@@ -286,18 +298,25 @@ public actor TransitService {
             zenbusTrips += entry.trips
         }
 
-        let todayKeys = Set(itineraries.map { TripPlanner.coverageKey(lineID: $0.lineID, itineraryID: $0.id, day: ServiceDay(containing: now)) })
+        let todayKeys = Set(itineraries.map { TripPlanner.coverageKey(lineID: $0.lineID, itineraryID: $0.id, day: today) })
         let coveredToday = todayKeys.intersection(coverage).count
         let needsFallback = coverage.count < itineraries.count * days.count
         var gtfsTrips: [TripInstance] = []
         if needsFallback, let schedule = schedule() {
-            gtfsTrips = schedule.trips(servingAny: stopIDs, from: now.addingTimeInterval(-3600), to: now.addingTimeInterval(horizon), network: network)
+            let gtfsStart = start.addingTimeInterval(-3600)
+            if let stopIDs {
+                gtfsTrips = schedule.trips(servingAny: stopIDs, from: gtfsStart, to: end, network: network)
+            } else {
+                gtfsTrips = schedule.trips(from: gtfsStart, to: end, network: network)
+            }
         }
         let trips = TripPlanner.merge(zenbus: zenbusTrips, coverage: coverage, gtfs: gtfsTrips)
 
         let status: FeedStatus
         let fetchedAny = entries.values.contains { now.timeIntervalSince($0.fetchedAt) < configuration.liveStaleAge }
-        if coveredToday == todayKeys.count, !todayKeys.isEmpty, fetchedAny {
+        if !days.contains(today) {
+            status = FeedStatus(kind: .theoretical, detail: "Horaires théoriques : le temps réel n'est disponible que pour aujourd'hui.", lastLiveUpdate: lastLiveSuccess)
+        } else if coveredToday == todayKeys.count, !todayKeys.isEmpty, fetchedAny {
             status = FeedStatus(kind: .live, detail: nil, lastLiveUpdate: lastLiveSuccess)
         } else if coveredToday > 0 {
             status = FeedStatus(kind: .partial, detail: "Temps réel indisponible sur certaines lignes : horaires théoriques affichés.", lastLiveUpdate: lastLiveSuccess)
@@ -311,6 +330,51 @@ public actor TransitService {
         return Resolved(trips: trips, alerts: alerts.values.sorted { $0.severity > $1.severity }, status: status)
     }
 
+    /// Itinéraire porte à porte avec correspondances.
+    public func planJourney(_ request: JourneyRequest, now: Date = Date()) async throws -> JourneySearchResult {
+        let network = try await currentNetwork()
+        let start: Date, end: Date
+        switch request.time {
+        case .now:
+            start = now
+            end = now.addingTimeInterval(4 * 3600)
+        case .departAt(let date):
+            start = date
+            end = date.addingTimeInterval(4 * 3600)
+        case .arriveBy(let date):
+            start = max(date.addingTimeInterval(-3 * 3600), date < now ? date.addingTimeInterval(-3 * 3600) : now)
+            end = date.addingTimeInterval(90 * 60)
+        }
+        let resolved = await resolveTrips(itineraries: network.itineraries, stopIDs: nil, network: network, from: start, to: end, now: now)
+        let planner = JourneyPlanner(network: network, trips: resolved.trips, options: request.options)
+
+        let journeys: [PlannedJourney]
+        var before: PlannedJourney?, after: PlannedJourney?
+        switch request.time {
+        case .now:
+            journeys = planner.journeys(from: request.from, to: request.to, departingAfter: now)
+        case .departAt(let date):
+            journeys = planner.journeys(from: request.from, to: request.to, departingAfter: date)
+        case .arriveBy(let date):
+            let result = planner.journeys(from: request.from, to: request.to, arrivingBy: date, notBefore: date > now ? now : nil)
+            journeys = result.journeys
+            before = result.before
+            after = result.after
+        }
+        let lines = Set(journeys.flatMap { $0.rides.map(\.lineID) })
+        return JourneySearchResult(
+            request: request,
+            journeys: journeys,
+            closestBeforeID: before?.id,
+            closestAfterID: after?.id,
+            origin: request.from,
+            destination: request.to,
+            alerts: resolved.alerts.filter { alert in alert.lineIDs.isEmpty || !lines.isDisjoint(with: alert.lineIDs) },
+            status: resolved.status,
+            generatedAt: now
+        )
+    }
+
     /// Prochains départs d'un arrêt.
     public func board(for area: StopArea, now: Date = Date(), horizon: TimeInterval = 3 * 3600) async throws -> StopBoard {
         let network = try await currentNetwork()
@@ -319,19 +383,6 @@ public actor TransitService {
         let resolved = await resolveTrips(itineraries: itineraries, stopIDs: stopIDs, network: network, now: now, horizon: horizon)
         let departures = TripPlanner.departures(from: resolved.trips, at: stopIDs, now: now, horizon: horizon)
         return StopBoard(area: area, departures: departures, alerts: resolved.alerts, status: resolved.status, generatedAt: now)
-    }
-
-    /// Trajets directs entre deux arrêts.
-    public func plan(from origin: StopArea, to destination: StopArea, now: Date = Date(), horizon: TimeInterval = 4 * 3600) async throws -> JourneyPlan {
-        let network = try await currentNetwork()
-        let originIDs = Set(origin.stopIDs), destinationIDs = Set(destination.stopIDs)
-        let itineraries = network.itineraries.filter { itinerary in
-            guard let first = itinerary.stopIDs.firstIndex(where: originIDs.contains) else { return false }
-            return itinerary.stopIDs[(first + 1)...].contains(where: destinationIDs.contains)
-        }
-        let resolved = await resolveTrips(itineraries: itineraries, stopIDs: originIDs, network: network, now: now, horizon: horizon)
-        let journeys = TripPlanner.journeys(from: resolved.trips, origin: originIDs, destination: destinationIDs, now: now, horizon: horizon)
-        return JourneyPlan(from: origin, to: destination, journeys: journeys, alerts: resolved.alerts, status: resolved.status, generatedAt: now)
     }
 
     /// Courses du jour d'un sens de ligne (fiche ligne).

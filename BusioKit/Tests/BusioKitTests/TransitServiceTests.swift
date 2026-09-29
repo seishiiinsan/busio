@@ -31,15 +31,4 @@ final class TransitServiceTests: XCTestCase {
         XCTAssertNotNil(diagnostics.lastLiveError)
         XCTAssertGreaterThan(diagnostics.gtfsTripCount, 0)
     }
-
-    func testOfflineCommutePlan() async throws {
-        let service = try offlineService()
-        let network = try await service.currentNetwork()
-        let home = network.searchAreas("gares castres").first!, work = network.searchAreas("gares mazamet").first!
-        let morning = try await service.plan(from: home, to: work, now: TestData.date(2026, 9, 29, 7, 45))
-        XCTAssertFalse(morning.journeys.isEmpty)
-        let evening = try await service.plan(from: work, to: home, now: TestData.date(2026, 9, 29, 16, 30))
-        XCTAssertFalse(evening.journeys.isEmpty)
-        XCTAssertTrue(evening.journeys.allSatisfy { $0.departureTime >= TestData.date(2026, 9, 29, 16, 29) })
-    }
 }

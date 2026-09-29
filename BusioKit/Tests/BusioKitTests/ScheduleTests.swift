@@ -65,23 +65,6 @@ final class ScheduleTests: XCTestCase {
         XCTAssertGreaterThan(ratio, 0.8)
     }
 
-    func testCommuteCastresToMazametFromTheoreticalSchedule() {
-        let network = TestData.network
-        let origin = TestData.area("gares castres"), destination = TestData.area("gares mazamet")
-        let now = TestData.date(2026, 9, 29, 7, 30)
-        let trips = TestData.schedule.trips(servingAny: Set(origin.stopIDs), from: now, to: now.addingTimeInterval(3 * 3600), network: network)
-        let journeys = TripPlanner.journeys(from: trips, origin: Set(origin.stopIDs), destination: Set(destination.stopIDs), now: now, horizon: 3 * 3600)
-        XCTAssertFalse(journeys.isEmpty)
-        for journey in journeys {
-            XCTAssertEqual(journey.lineID, TestData.line10.id)
-            XCTAssertEqual(journey.quality, .theoretical)
-            XCTAssertGreaterThan(journey.duration, 10 * 60)
-            XCTAssertLessThan(journey.duration, 90 * 60)
-            XCTAssertGreaterThanOrEqual(journey.departureTime, now.addingTimeInterval(-60))
-        }
-        print("Gares Castres → Gares Mazamet :", journeys.map { "\(Self.hhmm($0.departureTime))→\(Self.hhmm($0.arrivalTime))" }.joined(separator: ", "))
-    }
-
     func testMergePrefersZenbusOnlyForPublishedDays() throws {
         let network = TestData.network
         let message = try TestData.live("poll-l10-castres-mazamet.bin")

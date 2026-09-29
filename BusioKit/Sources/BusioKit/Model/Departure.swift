@@ -45,54 +45,6 @@ public struct Departure: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
-/// Un trajet direct d'un arrêt à un autre.
-public struct Journey: Identifiable, Hashable, Codable, Sendable {
-    public let id: String
-    public let tripID: String
-    public let lineID: String
-    public let itineraryID: String?
-    public let headsign: String
-    public let origin: StopCall
-    public let destination: StopCall
-    public let state: TripState
-    public let quality: TimingQuality
-    public let source: DataSource
-    public let vehicle: VehicleSnapshot?
-    public let stopsAway: Int?
-
-    public init(trip: TripInstance, origin: StopCall, destination: StopCall) {
-        id = "\(trip.id)@\(origin.index)-\(destination.index)"
-        tripID = trip.id
-        lineID = trip.lineID
-        itineraryID = trip.itineraryID
-        headsign = trip.headsign
-        self.origin = origin
-        self.destination = destination
-        state = trip.state
-        quality = origin.expected == nil && trip.quality < .planned ? .planned : trip.quality
-        source = trip.source
-        vehicle = trip.vehicle
-        if trip.state == .running, let previous = trip.vehicle?.previousStopIndex {
-            stopsAway = max(0, origin.index - previous)
-        } else {
-            stopsAway = nil
-        }
-    }
-
-    public var departureTime: Date { origin.departure ?? .distantFuture }
-    public var arrivalTime: Date { destination.arrival ?? .distantFuture }
-    public var scheduledDeparture: Date? { origin.scheduled }
-    public var scheduledArrival: Date? { destination.scheduledArrival ?? destination.scheduled }
-    public var duration: TimeInterval { arrivalTime.timeIntervalSince(departureTime) }
-    public var isCancelled: Bool { state == .cancelled }
-    public var stopCount: Int { destination.index - origin.index }
-
-    public var delay: TimeInterval? {
-        guard let expected = origin.expected, let scheduled = origin.scheduled else { return nil }
-        return expected.timeIntervalSince(scheduled)
-    }
-}
-
 /// État global des sources pour un résultat.
 public struct FeedStatus: Hashable, Codable, Sendable {
     public enum Kind: String, Codable, Sendable {
@@ -151,25 +103,4 @@ public struct StopBoard: Sendable {
                 return l0 != l1 ? l0 < l1 : $0.headsign < $1.headsign
             }
     }
-}
-
-public struct JourneyPlan: Sendable {
-    public let from: StopArea
-    public let to: StopArea
-    public let journeys: [Journey]
-    public let alerts: [ServiceAlert]
-    public let status: FeedStatus
-    public let generatedAt: Date
-
-    public init(from: StopArea, to: StopArea, journeys: [Journey], alerts: [ServiceAlert], status: FeedStatus, generatedAt: Date) {
-        self.from = from
-        self.to = to
-        self.journeys = journeys
-        self.alerts = alerts
-        self.status = status
-        self.generatedAt = generatedAt
-    }
-
-    /// Lignes directes entre les deux arrêts.
-    public var lineIDs: [String] { Array(Set(journeys.map(\.lineID))).sorted() }
 }

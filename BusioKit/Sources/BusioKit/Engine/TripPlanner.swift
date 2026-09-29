@@ -37,27 +37,6 @@ public enum TripPlanner {
         return deduplicated(result).sorted { $0.time < $1.time }
     }
 
-    /// Trajets directs d'un groupe de quais à un autre.
-    public static func journeys(from trips: [TripInstance], origin: Set<String>, destination: Set<String>, now: Date, horizon: TimeInterval) -> [Journey] {
-        let end = now.addingTimeInterval(horizon)
-        var result: [Journey] = []
-        for trip in trips where trip.state != .finished {
-            var best: (StopCall, StopCall)?
-            for (j, arrival) in trip.calls.enumerated() where destination.contains(arrival.stopID) && j > 0 {
-                // Montée la plus tardive avant cette descente (trajet le plus court sur les lignes en boucle).
-                guard let i = trip.calls[..<j].lastIndex(where: { origin.contains($0.stopID) }) else { continue }
-                let departure = trip.calls[i]
-                if best == nil || (arrival.index - departure.index) < (best!.1.index - best!.0.index) {
-                    best = (departure, arrival)
-                }
-            }
-            guard let (departure, arrival) = best, !departure.passed, let time = departure.departure else { continue }
-            guard time <= end, time >= now.addingTimeInterval(-tolerance(for: trip)) else { continue }
-            result.append(Journey(trip: trip, origin: departure, destination: arrival))
-        }
-        return result.sorted { $0.departureTime < $1.departureTime }
-    }
-
     /// Un bus suivi en direct reste affiché tant qu'il n'a pas quitté le quai ;
     /// un horaire sans suivi disparaît une minute après l'heure.
     static func tolerance(for trip: TripInstance) -> TimeInterval {

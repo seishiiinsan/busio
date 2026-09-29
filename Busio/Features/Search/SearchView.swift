@@ -6,9 +6,11 @@ struct SearchView: View {
     @Environment(AppModel.self) private var app
     @State private var query = ""
     @State private var nearby: [NearbyArea] = []
+    @State private var locating = true
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 if let network = app.network {
                     if query.isEmpty {
@@ -43,6 +45,12 @@ struct SearchView: View {
             .navigationDestination(for: StopArea.self) { StopBoardView(area: $0) }
             .navigationDestination(for: TripRoute.self) { TripDetailView(route: $0) }
             .task { await loadNearby() }
+            .task(id: app.network == nil) {
+                if app.demoScreen == "stop", let area = app.network?.searchAreas("gare sncf").first {
+                    path.append(area)
+                    app.demoScreen = nil
+                }
+            }
         }
     }
 
@@ -50,7 +58,9 @@ struct SearchView: View {
     private var nearbySection: some View {
         Section("À proximité") {
             if app.location.isAuthorized {
-                if nearby.isEmpty {
+                if locating && nearby.isEmpty {
+                    HStack { ProgressView(); Text("Localisation…").foregroundStyle(.secondary) }
+                } else if nearby.isEmpty {
                     Text("Aucun arrêt à moins de 1,5 km").foregroundStyle(.secondary)
                 }
                 ForEach(nearby) { item in
@@ -75,8 +85,15 @@ struct SearchView: View {
     }
 
     private func loadNearby() async {
-        guard let network = app.network, let here = await app.location.currentCoordinate() else { return }
-        nearby = network.nearestAreas(to: here, limit: 6).map { NearbyArea(area: $0.area, distance: $0.distance) }
+        // Réessaie tant que le réseau ou la position ne sont pas prêts.
+        for _ in 0..<5 {
+            if let network = app.network, let here = await app.location.currentCoordinate() {
+                nearby = network.nearestAreas(to: here, limit: 6).map { NearbyArea(area: $0.area, distance: $0.distance) }
+                break
+            }
+            try? await Task.sleep(for: .seconds(2))
+        }
+        locating = false
     }
 
     static func distance(_ meters: Double) -> String {

@@ -25,7 +25,9 @@ public enum TextFormatting {
         "lameilhe": "Lameilhé", "capelanie": "Capelanié", "bisseous": "Bisséous", "moliere": "Molière",
         "hopital": "Hôpital", "lycee": "Lycée", "eglise": "Église", "cite": "Cité", "prefecture": "Préfecture",
         "cimetiere": "Cimetière", "theatre": "Théâtre", "general": "Général", "mediatheque": "Médiathèque",
-        "residence": "Résidence", "universite": "Université", "piscine": "Piscine", "gares": "Gares",
+        "residence": "Résidence", "universite": "Université", "aeroport": "Aéroport", "plombieres": "Plombières",
+        "republique": "République", "liberation": "Libération", "chateau": "Château",
+        "pre": "Pré", "vallee": "Vallée",
     ]
 
     /// « COLLEGE JEAN-JAURES » → « Collège Jean-Jaures », « PLAN D'EAU » → « Plan d'Eau ».

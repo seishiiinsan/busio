@@ -172,14 +172,19 @@ private struct NextBusCard: View {
                     QualityTag(quality: journey.quality)
                 }
 
+                let farAway = journey.departureTime.timeIntervalSince(now) >= 60 * 60
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(TimeText.countdown(to: journey.departureTime, from: now))
+                    // Compte à rebours dans l'heure, heure de départ au-delà.
+                    Text(farAway ? TimeText.clock(journey.departureTime) : TimeText.countdown(to: journey.departureTime, from: now))
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .contentTransition(.numericText())
                         .strikethrough(journey.isCancelled)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("départ \(TimeText.clock(journey.departureTime))").font(.subheadline.weight(.semibold))
+                        Text(farAway ? "dans \(TimeText.countdown(to: journey.departureTime, from: now))" : "départ \(TimeText.clock(journey.departureTime))")
+                            .font(.subheadline.weight(.semibold))
                         DelayTag(delay: journey.delay)
                     }
                     Spacer(minLength: 0)
@@ -209,7 +214,7 @@ private struct NextBusCard: View {
 
                 HStack(spacing: 10) {
                     Button(action: follow) {
-                        Label("Suivre sur l'écran verrouillé", systemImage: "platter.filled.bottom.iphone")
+                        Label("Suivre ce bus", systemImage: "platter.filled.bottom.iphone")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glassProminent)
@@ -261,7 +266,7 @@ private struct UpcomingJourneys: View {
         let journeys = snapshot.upcoming(at: Date()).filter { $0.id != highlightID }
         if !journeys.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Ensuite").font(.title3.bold())
+                Text("Autres départs").font(.title3.bold())
                 VStack(spacing: 0) {
                     ForEach(journeys) { journey in
                         row(journey)
@@ -294,7 +299,12 @@ private struct UpcomingJourneys: View {
                 }
             }
             Spacer()
-            DepartureClock(date: journey.departureTime, cancelled: journey.isCancelled, emphasize: false)
+            TimelineView(.periodic(from: .now, by: 15)) { context in
+                Text(TimeText.countdown(to: journey.departureTime, from: context.date))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(journey.isCancelled ? .secondary : .primary)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

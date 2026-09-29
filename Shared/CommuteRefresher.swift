@@ -49,11 +49,15 @@ enum CommuteRefresher {
         return ([snapshot.status.kind.rawValue, snapshot.recommendedID ?? "", snapshot.originName] + journeys).joined(separator: "#")
     }
 
-    /// Bus conseillé s'il est encore attrapable, sinon le prochain.
+    /// Bus conseillé s'il part dans l'heure et demie et reste attrapable, sinon le prochain attrapable.
     static func nextJourney(in snapshot: CommuteSnapshot, now: Date) -> Journey? {
         let upcoming = snapshot.upcoming(at: now).filter { !$0.isCancelled }
         let reachable = upcoming.filter { LeaveAdvice(journey: $0, walk: snapshot.walk, buffer: snapshot.buffer).isReachable(from: now) }
-        return reachable.first { $0.id == snapshot.recommendedID } ?? reachable.first ?? upcoming.first
+        if let recommended = reachable.first(where: { $0.id == snapshot.recommendedID }),
+           recommended.departureTime.timeIntervalSince(now) <= 90 * 60 {
+            return recommended
+        }
+        return reachable.first ?? upcoming.first
     }
 }
 

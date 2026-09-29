@@ -12,6 +12,8 @@ final class AppModel {
     }
 
     var selectedTab: Tab = .commute
+    /// Écran à ouvrir au lancement (captures automatiques, DEBUG).
+    var demoScreen: String?
     var showOnboarding: Bool
     var showSettings = false
 
@@ -49,6 +51,9 @@ final class AppModel {
         if let index = arguments.firstIndex(of: "-tab"), arguments.indices.contains(index + 1),
            let tab = Tab(rawValue: arguments[index + 1]) {
             selectedTab = tab
+        }
+        if let index = arguments.firstIndex(of: "-screen"), arguments.indices.contains(index + 1) {
+            demoScreen = arguments[index + 1]
         }
         #endif
     }

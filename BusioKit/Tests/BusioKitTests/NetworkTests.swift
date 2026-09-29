@@ -73,6 +73,7 @@ final class NetworkTests: XCTestCase {
         XCTAssertEqual(TextFormatting.prettyStopName("MAIRIE PONT DE LARN"), "Mairie Pont de Larn")
         XCTAssertEqual(TextFormatting.prettyStopName("1ER MAI"), "1er Mai")
         XCTAssertEqual(TextFormatting.prettyStopName("GARE SNCF"), "Gare SNCF")
+        XCTAssertEqual(TextFormatting.prettyStopName("AEROPORT"), "Aéroport")
         XCTAssertEqual(TextFormatting.searchKey("  Écoles-Bisséous "), "ecoles bisseous")
     }
 

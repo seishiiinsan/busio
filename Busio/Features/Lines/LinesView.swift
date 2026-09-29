@@ -4,9 +4,10 @@ import BusioKit
 /// Liste des lignes du réseau Libellus.
 struct LinesView: View {
     @Environment(AppModel.self) private var app
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 if let network = app.network {
                     ForEach(network.lines) { line in
@@ -32,6 +33,12 @@ struct LinesView: View {
             .navigationDestination(for: Line.self) { LineDetailView(line: $0) }
             .navigationDestination(for: StopArea.self) { StopBoardView(area: $0) }
             .navigationDestination(for: TripRoute.self) { TripDetailView(route: $0) }
+            .task(id: app.network == nil) {
+                if app.demoScreen == "line", let line = app.network?.lines.first(where: { $0.code == "10" }) {
+                    path.append(line)
+                    app.demoScreen = nil
+                }
+            }
         }
     }
 

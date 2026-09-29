@@ -51,14 +51,16 @@ jobs:
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
           mkdir -p docs/screenshots
           shoot() {
-            xcrun simctl launch --terminate-running-process "$UDID" "$BID" -demo -tab "$1"
+            xcrun simctl launch --terminate-running-process "$UDID" "$BID" -demo -tab "$1" -screen "${4:-none}"
             sleep "${3:-18}"
             xcrun simctl io "$UDID" screenshot "docs/screenshots/$2.png"
           }
           shoot commute trajet 25
           shoot map carte
           shoot lines lignes
+          shoot lines ligne-10 20 line
           shoot search arrets
+          shoot search arret-gare-sncf 20 stop
           xcrun simctl ui "$UDID" appearance dark
           shoot commute trajet-sombre
           ls -la docs/screenshots

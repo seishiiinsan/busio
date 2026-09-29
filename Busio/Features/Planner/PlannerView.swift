@@ -56,7 +56,7 @@ struct PlannerView: View {
                 guard model.hasQuery else { return }
                 await model.search(app: app)
                 while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(model.timeMode == .now ? 20 : 60))
+                    try? await Task.sleep(for: .seconds(model.timeMode == .now ? 30 : 90))
                     guard !Task.isCancelled else { break }
                     await model.search(app: app, silently: true)
                 }

@@ -3,6 +3,9 @@
 App iPhone perso pour le réseau de bus **Libellus** (Castres-Mazamet) : les mêmes données que Zenbus, mieux rangées, avec ce qu'iOS sait faire de mieux (widgets, Live Activity, Siri, notifications).
 
 - **Itinéraire** (onglet d'accueil) : départ = ta position (ou un lieu), arrivée = adresse, lieu (Plans) ou arrêt. Heure facultative : *maintenant*, *partir à* ou *arriver avant*. Busio combine les lignes avec correspondances et marche, au choix *le plus rapide*, *le moins de correspondances* ou *le moins d'attente*.
+- **Recherche en phrase** : « demain 9h au boulot », « gare de Mazamet avant 8h30 », « de l'Archipel à la gare à 18h30 » remplissent le formulaire (dictée comprise). Analyse française sur l'appareil, Apple Intelligence en renfort si elle est disponible. *Maison* et *Travail* se règlent dans Réglages › Lieux.
+- **Trajet suivi** : Busio vérifie le temps réel toutes les 45 s. Si un retard fait sauter une correspondance (ou supprime un bus), il prévient et propose un **plan B** depuis l'arrêt de correspondance, à suivre en un geste.
+- **Dans le bus** : le GPS reconnaît que tu roules sur le tracé de ta ligne, compte les arrêts restants (Live Activity) et envoie « Descends au prochain arrêt » ; il signale aussi un arrêt dépassé. Sans GPS, le rappel part à l'heure prévue.
 - **Arriver avant 9:00** : Busio propose le bus qui arrive juste avant **et** celui juste après.
 - **Trajets favoris** (aucun par défaut) : « Archipel → Gares Mazamet, arrivée 9:00 du lundi au vendredi » en un geste, dans les widgets et avec Siri. Création du retour en un geste.
 - **Carte** : tous les bus en circulation, rafraîchis toutes les 10 s, tracés des lignes, filtre par ligne.
@@ -18,6 +21,10 @@ SwiftUI iOS 26 (Liquid Glass), Swift 6, aucune dépendance serveur.
 | --- | --- | --- | --- |
 | ![Itinéraire](docs/screenshots/itineraire.png) | ![Résultats](docs/screenshots/itineraire-resultats.png) | ![Détail](docs/screenshots/itineraire-detail.png) | ![Carte](docs/screenshots/carte.png) |
 
+| En phrase | Trajet suivi (plan B) |
+| --- | --- |
+| ![En phrase](docs/screenshots/itineraire-phrase.png) | ![Trajet suivi](docs/screenshots/trajet-suivi.png) |
+
 *Captures générées automatiquement dans le simulateur avec les vraies données (workflow **Screenshots**).*
 
 ## Calcul d'itinéraire
@@ -28,6 +35,12 @@ SwiftUI iOS 26 (Liquid Glass), Swift 6, aucune dépendance serveur.
 - Montée au dernier arrêt possible demandant le moins de marche ; marche finale pénalisée (mieux vaut 1 min de plus que 10 min à pied).
 - Plusieurs départs successifs, sans doublon ni itinéraire dominé (partir plus tard et arriver plus tôt élimine l'autre).
 - Temps réel Zenbus pris en compte (retards, suppressions, bus déjà passés) ; horaires théoriques pour les autres jours.
+
+Trajet suivi (`Engine/JourneyMonitor.swift`, `Engine/JourneyTracker.swift`) :
+
+- Les mêmes bus sont retrouvés à chaque actualisation (même entre GTFS et Zenbus), marches recalées sur les nouveaux horaires.
+- Correspondance *juste* sous 1 min de marge, *ratée* sous 0 : plan B calculé depuis l'arrêt de correspondance, en excluant le bus menacé.
+- GPS : position projetée sur le tracé réel de la ligne (variantes Zenbus), montée détectée quand on avance au-delà de l'arrêt en roulant, descente quand on s'arrête à l'arrêt. Testé sur des trajets simulés le long des vraies lignes.
 
 ## Fiabilité des données
 
@@ -73,6 +86,8 @@ Sans compte développeur payant, pas de serveur push : iOS réveille Busio en ar
 2. Action **Busio › Suivre mon trajet**, en choisissant ton trajet favori.
 
 Le compte à rebours s'affiche sur l'écran verrouillé, correspondances comprises ; le bouton ↻ de la Live Activity le met à jour avec le temps réel. Fais la même chose pour le retour.
+
+Le suivi GPS dans le bus (alerte de descente) démarre quand Busio est ouvert : après une automatisation, ouvre l'app une fois. iOS affiche alors l'indicateur de localisation bleu jusqu'à l'arrivée.
 
 ## Structure
 

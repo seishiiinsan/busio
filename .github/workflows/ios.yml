@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
@@ -40,6 +43,7 @@ jobs:
       - name: Build app + widgets (simulateur, sans signature)
         run: |
           set -o pipefail
+          mkdir -p build
           xcodebuild build \
             -project Busio.xcodeproj -scheme Busio -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
@@ -51,6 +55,17 @@ jobs:
       - name: Erreurs de compilation
         if: failure()
         run: grep -E "error:" build/xcodebuild.log | sort -u | head -100 || true
+
+      - name: Commit du projet régénéré sur macOS
+        if: success() && github.event_name == 'push'
+        run: |
+          if ! git diff --quiet -- Busio.xcodeproj; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Busio.xcodeproj
+            git commit -m "build: regenerate Xcode project"
+            git push origin "HEAD:${GITHUB_REF_NAME}" || echo "push ignoré (branche avancée)"
+          fi
 
       - uses: actions/upload-artifact@v4
         if: always()

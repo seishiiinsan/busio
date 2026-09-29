@@ -10,6 +10,16 @@ public struct WalkLeg: Hashable, Codable, Sendable {
     public let end: Date
     public let distance: Double
 
+    public init(fromName: String, toName: String, from: Coordinate, to: Coordinate, start: Date, end: Date, distance: Double) {
+        self.fromName = fromName
+        self.toName = toName
+        self.from = from
+        self.to = to
+        self.start = start
+        self.end = end
+        self.distance = distance
+    }
+
     public var duration: TimeInterval { end.timeIntervalSince(start) }
 }
 
@@ -25,6 +35,19 @@ public struct RideLeg: Hashable, Codable, Sendable {
     public let quality: TimingQuality
     public let source: DataSource
     public let vehicle: VehicleSnapshot?
+
+    public init(tripID: String, lineID: String, itineraryID: String?, headsign: String, calls: [StopCall], state: TripState, quality: TimingQuality, source: DataSource, vehicle: VehicleSnapshot?) {
+        precondition(calls.count >= 2, "une montée et une descente")
+        self.tripID = tripID
+        self.lineID = lineID
+        self.itineraryID = itineraryID
+        self.headsign = headsign
+        self.calls = calls
+        self.state = state
+        self.quality = quality
+        self.source = source
+        self.vehicle = vehicle
+    }
 
     public var board: StopCall { calls[0] }
     public var alight: StopCall { calls[calls.count - 1] }

@@ -2,21 +2,32 @@
 
 App iPhone perso pour le réseau de bus **Libellus** (Castres-Mazamet) : les mêmes données que Zenbus, mieux rangées, avec ce qu'iOS sait faire de mieux (widgets, Live Activity, Siri, notifications).
 
-- **Trajet** : l'aller le matin, le retour l'après-midi, sans rien toucher. Le bus conseillé selon ton horaire, le compte à rebours, l'heure à laquelle partir à pied (temps de marche réel calculé par Plans), le retard.
+- **Itinéraire** (onglet d'accueil) : départ = ta position (ou un lieu), arrivée = adresse, lieu (Plans) ou arrêt. Heure facultative : *maintenant*, *partir à* ou *arriver avant*. Busio combine les lignes avec correspondances et marche, au choix *le plus rapide*, *le moins de correspondances* ou *le moins d'attente*.
+- **Arriver avant 9:00** : Busio propose le bus qui arrive juste avant **et** celui juste après.
+- **Trajets favoris** (aucun par défaut) : « Archipel → Gares Mazamet, arrivée 9:00 du lundi au vendredi » en un geste, dans les widgets et avec Siri. Création du retour en un geste.
 - **Carte** : tous les bus en circulation, rafraîchis toutes les 10 s, tracés des lignes, filtre par ligne.
 - **Lignes** : schéma de chaque ligne avec les bus en route et le prochain passage à chaque arrêt.
 - **Arrêts** : recherche, arrêts à proximité, favoris, départs groupés par ligne et direction, détail d'une course arrêt par arrêt.
-- **Widgets** écran d'accueil et écran verrouillé, **Live Activity** (Dynamic Island) avec bouton d'actualisation, bouton **Centre de contrôle / bouton Action**.
-- **Siri / Raccourcis** : « Prochain bus avec Busio », « Suivre mon bus avec Busio ».
-- **Notifications** : « pars maintenant », retards et suppressions de ton bus.
+- **Widgets** écran d'accueil et écran verrouillé (un trajet favori au choix), **Live Activity** qui suit l'étape en cours (marche, bus, correspondance), bouton **Centre de contrôle / bouton Action**.
+- **Siri / Raccourcis** : « Prochain trajet avec Busio », « Suivre mon trajet avec Busio ».
+- **Notifications** : « pars maintenant », retards et suppressions.
 
 SwiftUI iOS 26 (Liquid Glass), Swift 6, aucune dépendance serveur.
 
-| Trajet | Carte | Ligne | Arrêt |
+| Itinéraire | Résultats | Détail | Carte |
 | --- | --- | --- | --- |
-| ![Trajet](docs/screenshots/trajet.png) | ![Carte](docs/screenshots/carte.png) | ![Ligne 10](docs/screenshots/ligne-10.png) | ![Gare SNCF](docs/screenshots/arret-gare-sncf.png) |
+| ![Itinéraire](docs/screenshots/itineraire.png) | ![Résultats](docs/screenshots/itineraire-resultats.png) | ![Détail](docs/screenshots/itineraire-detail.png) | ![Carte](docs/screenshots/carte.png) |
 
 *Captures générées automatiquement dans le simulateur avec les vraies données (workflow **Screenshots**).*
+
+## Calcul d'itinéraire
+
+`BusioKit/Sources/BusioKit/Engine/JourneyPlanner.swift` implémente **RAPTOR** : chaque « tour » ajoute un bus (tour 1 = direct, tour 2 = une correspondance…), ce qui donne pour chaque heure de départ le meilleur itinéraire par nombre de correspondances.
+
+- Marche vers/depuis tous les arrêts à moins de 1 km (réglable), correspondances à pied jusqu'à 400 m, marge de correspondance de 2 min (réglable).
+- Montée au dernier arrêt possible demandant le moins de marche ; marche finale pénalisée (mieux vaut 1 min de plus que 10 min à pied).
+- Plusieurs départs successifs, sans doublon ni itinéraire dominé (partir plus tard et arriver plus tôt élimine l'autre).
+- Temps réel Zenbus pris en compte (retards, suppressions, bus déjà passés) ; horaires théoriques pour les autres jours.
 
 ## Fiabilité des données
 
@@ -58,19 +69,19 @@ Avec un Apple ID gratuit, l'app **expire au bout de 7 jours** : rebranche l'iPho
 
 Sans compte développeur payant, pas de serveur push : iOS réveille Busio en arrière-plan quand il le juge bon. Pour un suivi garanti :
 
-1. **Raccourcis** › Automatisation › **+** › **Heure de la journée** (ex. 8 h 30, du lundi au vendredi) › **Exécuter immédiatement**.
-2. Action **Busio › Suivre mon bus**.
+1. **Raccourcis** › Automatisation › **+** › **Heure de la journée** (ex. 8 h 15, du lundi au vendredi) › **Exécuter immédiatement**.
+2. Action **Busio › Suivre mon trajet**, en choisissant ton trajet favori.
 
-Le compte à rebours s'affiche sur l'écran verrouillé ; le bouton ↻ de la Live Activity le met à jour avec le temps réel. Fais la même chose vers 16 h 15 pour le retour.
+Le compte à rebours s'affiche sur l'écran verrouillé, correspondances comprises ; le bouton ↻ de la Live Activity le met à jour avec le temps réel. Fais la même chose pour le retour.
 
 ## Structure
 
 ```
 BusioKit/            Moteur (Swift package, testé sur Linux et macOS)
   Proto/             Sous-ensemble du protocole temps réel Zenbus
-  Sources/BusioKit/  Zenbus (client + mapping), GTFS, planification, cache, trajet
+  Sources/BusioKit/  Zenbus (client + mapping), GTFS, calcul d'itinéraire, cache, favoris
   Tests/             Tests sur données réelles (Fixtures + données embarquées)
-Busio/               App SwiftUI (Trajet, Carte, Lignes, Arrêts, Réglages, Accueil)
+Busio/               App SwiftUI (Itinéraire, Carte, Lignes, Arrêts, Réglages, Accueil)
 BusioWidgets/        Widgets, Live Activity, bouton de contrôle
 Shared/              Code commun app + widgets (App Group, Live Activity, alertes, intents)
 Config/              Réglages de signature (xcconfig)

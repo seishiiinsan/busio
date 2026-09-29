@@ -1,10 +1,14 @@
 name: Probe data sources
 
+# Vérifie chaque matin que l'API Zenbus et le GTFS répondent toujours au format attendu.
+# En cas d'échec, GitHub envoie un e-mail : l'app a peut-être besoin d'une mise à jour.
 on:
+  schedule:
+    - cron: "17 5 * * 1-5"
+  workflow_dispatch:
   push:
     branches: ["claude/**"]
     paths: ["Tools/Probe/**", ".github/workflows/probe.yml"]
-  workflow_dispatch:
 
 jobs:
   probe:

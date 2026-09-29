@@ -143,6 +143,12 @@ public actor TransitService {
         }
     }
 
+    /// Charge réseau et horaires théoriques à l'avance (évite l'attente au premier écran).
+    public func preload() async {
+        _ = try? await currentNetwork()
+        _ = schedule()
+    }
+
     /// Horaires théoriques : cache → données embarquées.
     public func schedule() -> GTFSSchedule? {
         if let gtfs { return gtfs }

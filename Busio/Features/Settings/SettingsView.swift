@@ -128,18 +128,21 @@ struct MinutePicker: View {
 
 struct WeekdayPicker: View {
     @Binding var selection: Set<Int>
-    private let days: [(Int, String)] = [(2, "L"), (3, "M"), (4, "M"), (5, "J"), (6, "V"), (7, "S"), (1, "D")]
+    /// Weekday `Calendar` (1 = dimanche) et initiale, du lundi au dimanche.
+    private let days = [2, 3, 4, 5, 6, 7, 1]
+    private let letters = ["L", "M", "M", "J", "V", "S", "D"]
 
     var body: some View {
         HStack {
             Text("Jours")
             Spacer()
-            ForEach(days, id: \.0) { day, letter in
+            ForEach(0..<7, id: \.self) { position in
+                let day = days[position]
                 let isOn = selection.contains(day)
                 Button {
                     if isOn { selection.remove(day) } else { selection.insert(day) }
                 } label: {
-                    Text(letter)
+                    Text(letters[position])
                         .font(.footnote.weight(.bold))
                         .frame(width: 28, height: 28)
                         .foregroundStyle(isOn ? Color.white : .primary)

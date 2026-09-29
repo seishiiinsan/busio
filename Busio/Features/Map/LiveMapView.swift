@@ -21,40 +21,31 @@ struct LiveMapView: View {
     var body: some View {
         NavigationStack {
             Map(position: $position) {
-                if let network = app.network {
-                    ForEach(network.itineraries.filter { !hiddenLines.contains($0.lineID) }) { itinerary in
-                        let tint = network.line(itinerary.lineID)?.tint ?? .gray
-                        ForEach(Array(itinerary.paths.enumerated()), id: \.offset) { _, path in
-                            MapPolyline(coordinates: path.map(\.clCoordinate))
-                                .stroke(tint.opacity(0.55), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                ForEach(polylines) { polyline in
+                    MapPolyline(coordinates: polyline.coordinates)
+                        .stroke(polyline.tint.opacity(0.55), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                }
+                ForEach(cameraDistance < 5_000 ? (app.network?.areas ?? []) : []) { area in
+                    Annotation(area.name, coordinate: area.coordinate.clCoordinate, anchor: .center) {
+                        NavigationLink(value: area) {
+                            Circle()
+                                .fill(.background)
+                                .stroke(.secondary, lineWidth: 2)
+                                .frame(width: 10, height: 10)
                         }
                     }
-                    if cameraDistance < 5_000 {
-                        ForEach(network.areas) { area in
-                            Annotation(area.name, coordinate: area.coordinate.clCoordinate, anchor: .center) {
-                                NavigationLink(value: area) {
-                                    Circle()
-                                        .fill(.background)
-                                        .stroke(.secondary, lineWidth: 2)
-                                        .frame(width: 10, height: 10)
-                                }
-                            }
-                            .annotationTitles(cameraDistance < 2_000 ? .automatic : .hidden)
+                    .annotationTitles(cameraDistance < 2_000 ? .automatic : .hidden)
+                }
+                ForEach(buses) { bus in
+                    Annotation(bus.trip.headsign, coordinate: bus.vehicle.coordinate.clCoordinate, anchor: .center) {
+                        Button {
+                            selectedTrip = bus.trip
+                        } label: {
+                            BusMarker(line: app.network?.line(bus.trip.lineID), heading: bus.vehicle.heading, stale: bus.vehicle.isStale(at: Date()))
                         }
+                        .buttonStyle(.plain)
                     }
-                    ForEach(visibleTrips) { trip in
-                        if let vehicle = trip.vehicle {
-                            Annotation(trip.headsign, coordinate: vehicle.coordinate.clCoordinate, anchor: .center) {
-                                Button {
-                                    selectedTrip = trip
-                                } label: {
-                                    BusMarker(line: network.line(trip.lineID), heading: vehicle.heading, stale: vehicle.isStale(at: Date()))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .annotationTitles(.hidden)
-                        }
-                    }
+                    .annotationTitles(.hidden)
                 }
                 UserAnnotation()
             }
@@ -92,6 +83,31 @@ struct LiveMapView: View {
 
     private var visibleTrips: [TripInstance] {
         trips.filter { !hiddenLines.contains($0.lineID) }
+    }
+
+    private struct Bus: Identifiable {
+        let trip: TripInstance
+        let vehicle: VehicleSnapshot
+        var id: String { trip.id }
+    }
+
+    private var buses: [Bus] {
+        visibleTrips.compactMap { trip in trip.vehicle.map { Bus(trip: trip, vehicle: $0) } }
+    }
+
+    private struct Polyline: Identifiable {
+        let id: String
+        let coordinates: [CLLocationCoordinate2D]
+        let tint: Color
+    }
+
+    private var polylines: [Polyline] {
+        guard let network = app.network else { return [] }
+        return network.itineraries.filter { !hiddenLines.contains($0.lineID) }.flatMap { itinerary in
+            itinerary.paths.enumerated().map { index, path in
+                Polyline(id: "\(itinerary.id)-\(index)", coordinates: path.map(\.clCoordinate), tint: network.line(itinerary.lineID)?.tint ?? .gray)
+            }
+        }
     }
 
     private func load() async {

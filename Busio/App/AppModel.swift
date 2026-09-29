@@ -39,6 +39,7 @@ final class AppModel {
     func start() async {
         await loadNetwork()
         BackgroundRefresh.schedule(preferences: preferences)
+        await service.preload()
         await service.refreshStaticData()
         await loadNetwork()
     }

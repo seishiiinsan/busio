@@ -21,6 +21,7 @@ enum CommuteRefresher {
         guard preferences.commute.isConfigured else { throw TransitError.noData }
         let direction = direction ?? preferences.commute.direction(at: now)
         let walk = walk ?? WalkMemory.walk(for: direction) ?? preferences.commute.fallbackWalk(for: direction)
+        let previous = AppGroup.store.loadSnapshot(direction)
         let snapshot = try await Transit.service.commuteSnapshot(settings: preferences.commute, direction: direction, walk: walk, now: now)
         AppGroup.store.save(snapshot)
 
@@ -36,10 +37,16 @@ enum CommuteRefresher {
         if options.contains(.updateAlerts) {
             await CommuteAlerts.update(with: snapshot, preferences: preferences, now: now)
         }
-        if options.contains(.reloadWidgets) {
+        // Recharge les widgets seulement si l'affichage change (budget WidgetKit).
+        if options.contains(.reloadWidgets), previous.map(signature) != signature(snapshot) {
             WidgetCenter.shared.reloadAllTimelines()
         }
         return snapshot
+    }
+
+    private static func signature(_ snapshot: CommuteSnapshot) -> String {
+        let journeys = snapshot.journeys.prefix(4).map { "\($0.tripID)|\(Int($0.departureTime.timeIntervalSince1970 / 60))|\($0.quality.rawValue)|\($0.isCancelled)" }
+        return ([snapshot.status.kind.rawValue, snapshot.recommendedID ?? "", snapshot.originName] + journeys).joined(separator: "#")
     }
 
     /// Bus conseillé s'il est encore attrapable, sinon le prochain.

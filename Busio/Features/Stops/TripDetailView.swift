@@ -139,25 +139,25 @@ private struct TripMap: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        let paths = Array((itinerary?.paths ?? []).enumerated())
+        let stops = trip.calls.compactMap { app.network?.stop($0.stopID) }
+        let vehicles = [trip.vehicle].compactMap { $0 }
+        let tint = line?.tint ?? .accentColor
         Map(initialPosition: .automatic) {
-            if let itinerary {
-                ForEach(Array(itinerary.paths.enumerated()), id: \.offset) { _, path in
-                    MapPolyline(coordinates: path.map(\.clCoordinate))
-                        .stroke(line?.tint ?? .accentColor, lineWidth: 4)
-                }
+            ForEach(paths, id: \.offset) { item in
+                MapPolyline(coordinates: item.element.map(\.clCoordinate))
+                    .stroke(tint, lineWidth: 4)
             }
-            ForEach(trip.calls, id: \.index) { call in
-                if let stop = app.network?.stop(call.stopID) {
-                    Annotation(stop.name, coordinate: stop.coordinate.clCoordinate, anchor: .center) {
-                        Circle()
-                            .fill(.white)
-                            .stroke(line?.tint ?? .gray, lineWidth: 2)
-                            .frame(width: 8, height: 8)
-                    }
-                    .annotationTitles(.hidden)
+            ForEach(stops) { stop in
+                Annotation(stop.name, coordinate: stop.coordinate.clCoordinate, anchor: .center) {
+                    Circle()
+                        .fill(.white)
+                        .stroke(tint, lineWidth: 2)
+                        .frame(width: 8, height: 8)
                 }
+                .annotationTitles(.hidden)
             }
-            if let vehicle = trip.vehicle {
+            ForEach(vehicles, id: \.id) { vehicle in
                 Annotation("Bus", coordinate: vehicle.coordinate.clCoordinate) {
                     BusMarker(line: line, heading: vehicle.heading, stale: vehicle.isStale(at: Date()))
                 }

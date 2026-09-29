@@ -105,6 +105,7 @@ public enum ZenbusMapper {
     }
 
     public static func snapshot(from message: ZenbusRealtime_LiveMessage, network: Network) -> LiveSnapshot {
+        let serverTime = message.endProcessing > 0 ? Date(timeIntervalSince1970: TimeInterval(message.endProcessing) / 1000) : nil
         var trips: [TripInstance] = []
         var days: [String: ServiceDay] = [:]
 
@@ -116,7 +117,7 @@ public enum ZenbusMapper {
             guard let day = serviceDay(yyyymmdd: timetable.yyyymmddOneof != nil ? timetable.yyyymmdd : 0, midnight: midnight) else { continue }
             days[itineraryID] = day
             for (position, column) in timetable.column.enumerated() {
-                if let trip = trip(from: column, itinerary: itinerary, network: network, day: day, midnight: midnight, position: position) {
+                if let trip = trip(from: column, itinerary: itinerary, network: network, day: day, midnight: midnight, position: position, now: serverTime) {
                     trips.append(trip)
                 }
             }
@@ -128,14 +129,13 @@ public enum ZenbusMapper {
             let midnight = column.midnight > 0 ? Date(timeIntervalSince1970: TimeInterval(column.midnight)) : nil
             let yyyymmdd = column.yyyymmddOneof != nil ? column.yyyymmdd : 0
             guard let day = serviceDay(yyyymmdd: yyyymmdd, midnight: midnight) ?? days[itinerary.id] else { continue }
-            if let trip = trip(from: column, itinerary: itinerary, network: network, day: day, midnight: midnight, position: 10_000 + position),
+            if let trip = trip(from: column, itinerary: itinerary, network: network, day: day, midnight: midnight, position: 10_000 + position, now: serverTime),
                !trips.contains(where: { $0.id == trip.id }) {
                 trips.append(trip)
             }
         }
 
         let alerts = message.messages.compactMap(alert(from:))
-        let serverTime = message.endProcessing > 0 ? Date(timeIntervalSince1970: TimeInterval(message.endProcessing) / 1000) : nil
         return LiveSnapshot(trips: trips, alerts: alerts, serviceDays: days, serverTime: serverTime)
     }
 
@@ -145,7 +145,8 @@ public enum ZenbusMapper {
         return midnight.map { ServiceDay(containing: $0.addingTimeInterval(12 * 3600)) }
     }
 
-    static func trip(from column: ZenbusRealtime_TripColumn, itinerary: Itinerary, network: Network, day: ServiceDay, midnight: Date?, position: Int) -> TripInstance? {
+    /// `now` : heure serveur du relevé, pour ne pas marquer « passé » un bus encore à quai.
+    static func trip(from column: ZenbusRealtime_TripColumn, itinerary: Itinerary, network: Network, day: ServiceDay, midnight: Date?, position: Int, now: Date? = nil) -> TripInstance? {
         let base = column.midnight > 0 ? Date(timeIntervalSince1970: TimeInterval(column.midnight)) : (midnight ?? day.referenceDate)
         func date(_ seconds: Int32) -> Date? { seconds > 0 ? base.addingTimeInterval(TimeInterval(seconds)) : nil }
 
@@ -186,7 +187,12 @@ public enum ZenbusMapper {
             let scheduledDeparture = a.flatMap { date($0.departure) ?? date($0.arriparture) } ?? scheduledArrival
             var expectedArrival = e.flatMap { date($0.arrival) }
             var expectedDeparture = e.flatMap { date($0.departure) }
-            let passed = state == .finished || (state == .running && index <= previousIndex)
+            var passed = state == .finished || (state == .running && index <= previousIndex)
+            if passed, state == .running, index == previousIndex, let now,
+               let leaving = expectedDeparture ?? scheduledDeparture, leaving > now.addingTimeInterval(30) {
+                // Bus à quai (souvent au terminus) qui n'est pas encore reparti.
+                passed = false
+            }
 
             if state == .running {
                 if let expectedDeparture, let scheduledDeparture {

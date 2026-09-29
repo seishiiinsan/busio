@@ -92,12 +92,11 @@ private struct StopHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            let platforms = area.stopIDs.compactMap { app.network?.stop($0) }
             Map(initialPosition: .region(MKCoordinateRegion(center: area.coordinate.clCoordinate, latitudinalMeters: 450, longitudinalMeters: 450))) {
-                ForEach(area.stopIDs, id: \.self) { stopID in
-                    if let stop = app.network?.stop(stopID) {
-                        Marker(stop.name, systemImage: "bus.fill", coordinate: stop.coordinate.clCoordinate)
-                            .tint(.accentColor)
-                    }
+                ForEach(platforms) { stop in
+                    Marker(stop.name, systemImage: "bus.fill", coordinate: stop.coordinate.clCoordinate)
+                        .tint(.accentColor)
                 }
                 UserAnnotation()
             }

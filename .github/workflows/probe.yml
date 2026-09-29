@@ -1,0 +1,27 @@
+name: Probe data sources
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["Tools/Probe/**", ".github/workflows/probe.yml"]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Tools/Probe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm init -y >/dev/null && npm install protobufjs@7 --silent
+      - run: node probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-out
+          path: Tools/Probe/probe-out

@@ -1,0 +1,8 @@
+// Copie ce fichier en Local.xcconfig (ignoré par git) puis relance `make project`.
+
+// Identifiant d'équipe : Xcode > Settings > Accounts > ton Apple ID > Team ID
+// (pour un Apple ID gratuit, c'est l'identifiant de la « Personal Team »).
+DEVELOPMENT_TEAM = ABCDE12345
+
+// Un compte gratuit exige un identifiant d'app unique au monde.
+BUSIO_BUNDLE_PREFIX = fr.tonnom

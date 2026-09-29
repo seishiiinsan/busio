@@ -8,8 +8,6 @@ DerivedData/
 BusioKit/Package.resolved
 build/
 
-# Projet généré par XcodeGen (make project)
-Busio.xcodeproj/
 
 # Réglages locaux (équipe de signature)
 Config/Local.xcconfig

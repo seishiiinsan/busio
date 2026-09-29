@@ -1,0 +1,702 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2D4553D3DD961B6EC223AB0B /* CommuteLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */; };
+		345D1F2722543C3D0C9D7D42 /* CommuteRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */; };
+		3E7FA85F12F872523719F94F /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB36634C22E8455A22A8B006 /* AppEnvironment.swift */; };
+		5F9AF6ACE85C62C2584F3CB5 /* CommuteActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */; };
+		6BBC40F27EEB19DB0495A903 /* CommuteWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF692042777F13D1F7524FD /* CommuteWidget.swift */; };
+		72BB6A064CB752A609CFBBE6 /* BusioWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */; };
+		82978FFC0B1043AAE95744EA /* CommuteIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */; };
+		8996544778F7D12A33695C01 /* CommuteActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */; };
+		929A17BD7923257A5F24217C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38ED6537431DC975FDFD09D0 /* Assets.xcassets */; };
+		97A13B7CBF3618C96C760194 /* BusioKit in Frameworks */ = {isa = PBXBuildFile; productRef = F49AA9DF1D6E22C0D5FC68D9 /* BusioKit */; };
+		9FCB115339AF1C1D1E0E28F0 /* Seed in Resources */ = {isa = PBXBuildFile; fileRef = 7883C0FEDD8F7177C0C7E276 /* Seed */; };
+		A42668EF54561A939D170C3F /* BusioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9D5D51C5B0D6D4ADE5C3DDB9 /* BusioKit */; };
+		B4A6CD8DAF685A9CA18D5A92 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67BFCCD0A1BEA5E9FB0B9420 /* WidgetKit.framework */; };
+		C7A9302D0B3F8D0BE63B1DB2 /* CommuteAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */; };
+		D5A39F3B135F3350F63975C2 /* BusioWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D75DFF13847A860BBBC272A9 /* CommuteRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */; };
+		DAB54934E98B74573D5885AE /* CommuteIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */; };
+		E3BC83EEDB6EC0BF6F9E0DE1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7639E954AA6D1DCDC035BEF6 /* SwiftUI.framework */; };
+		E8D00D4528BEF7073FEA7872 /* BusioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC61C4D83FA702B15EC8246 /* BusioApp.swift */; };
+		EC8888DE27D8D8D70F23EBAF /* CommuteAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */; };
+		F63337FBC34690EEC64581A2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB36634C22E8455A22A8B006 /* AppEnvironment.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2EC18F9FE7BC2707B0835ADC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C008D1F4EA2BAC71DAF0B6D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7915125E292071179F3BF44F;
+			remoteInfo = BusioWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		96BFA12D75B4B86F8A40D24B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D5A39F3B135F3350F63975C2 /* BusioWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2CC61C4D83FA702B15EC8246 /* BusioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusioApp.swift; sourceTree = "<group>"; };
+		36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteAlerts.swift; sourceTree = "<group>"; };
+		38ED6537431DC975FDFD09D0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteIntents.swift; sourceTree = "<group>"; };
+		61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteRefresher.swift; sourceTree = "<group>"; };
+		67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteActivity.swift; sourceTree = "<group>"; };
+		67BFCCD0A1BEA5E9FB0B9420 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		7639E954AA6D1DCDC035BEF6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		7819026C87B59EF207EB540C /* BusioKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BusioKit; path = BusioKit; sourceTree = SOURCE_ROOT; };
+		7883C0FEDD8F7177C0C7E276 /* Seed */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Seed; path = Busio/Resources/Seed; sourceTree = SOURCE_ROOT; };
+		A044B1771A1287D85F2849C1 /* Busio.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Busio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAFF94BF55A8B4CE3D44B4E5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		AB36634C22E8455A22A8B006 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteLiveActivity.swift; sourceTree = "<group>"; };
+		C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BusioWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusioWidgetsBundle.swift; sourceTree = "<group>"; };
+		DCF692042777F13D1F7524FD /* CommuteWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteWidget.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		47A2889CCE1C8610A941422E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97A13B7CBF3618C96C760194 /* BusioKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		83BC6AB8AE8B87ED33E9BDB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A42668EF54561A939D170C3F /* BusioKit in Frameworks */,
+				B4A6CD8DAF685A9CA18D5A92 /* WidgetKit.framework in Frameworks */,
+				E3BC83EEDB6EC0BF6F9E0DE1 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02DA5877182B95256EDB1EAB /* Map */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		0506378608310116BCC63620 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AAFF94BF55A8B4CE3D44B4E5 /* Base.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		0D20986027ED6BA0FA8196C3 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		161497CF63E807F146E8062C /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				502C0C0D195DE83655BEDCDE /* Commute */,
+				4B9D7EEB9C7EDC84D83C0CC0 /* Lines */,
+				02DA5877182B95256EDB1EAB /* Map */,
+				78E377208B9CCA84391D2DFC /* Onboarding */,
+				E09E16CDFDF25EF01E2F89CF /* Search */,
+				0D20986027ED6BA0FA8196C3 /* Settings */,
+				6A273FBE3F7A9773CA2DE7D7 /* Stops */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		194033C6DA56174BA5937541 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		4B9D7EEB9C7EDC84D83C0CC0 /* Lines */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Lines;
+			sourceTree = "<group>";
+		};
+		4D8713FE643F39CAD0566808 /* BusioWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				CF40391FC9FEDA10E0BBBB63 /* BusioWidgetsBundle.swift */,
+				AF477846A716344E51D3D101 /* CommuteLiveActivity.swift */,
+				DCF692042777F13D1F7524FD /* CommuteWidget.swift */,
+			);
+			path = BusioWidgets;
+			sourceTree = "<group>";
+		};
+		502C0C0D195DE83655BEDCDE /* Commute */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Commute;
+			sourceTree = "<group>";
+		};
+		6A273FBE3F7A9773CA2DE7D7 /* Stops */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Stops;
+			sourceTree = "<group>";
+		};
+		6BFE6FE12F1BB61AAE5F8827 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				4A210D8AB124D268DDAA1D68 /* CommuteIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		720CB791B8212DAFC299CE67 /* Busio */ = {
+			isa = PBXGroup;
+			children = (
+				EDAC2472C807106991FB3470 /* App */,
+				194033C6DA56174BA5937541 /* Components */,
+				161497CF63E807F146E8062C /* Features */,
+				F5BD184F669F7D9800B34DF3 /* Resources */,
+				DB142BF9E8736EFD73B61867 /* Services */,
+			);
+			path = Busio;
+			sourceTree = "<group>";
+		};
+		78E377208B9CCA84391D2DFC /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		7A8161FDDA7D9E55D74A9675 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7639E954AA6D1DCDC035BEF6 /* SwiftUI.framework */,
+				67BFCCD0A1BEA5E9FB0B9420 /* WidgetKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B7030C0041B22C97B5F804F3 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				7819026C87B59EF207EB540C /* BusioKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		DB142BF9E8736EFD73B61867 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E09E16CDFDF25EF01E2F89CF /* Search */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		E4136CE89A75947DC82EAC25 = {
+			isa = PBXGroup;
+			children = (
+				720CB791B8212DAFC299CE67 /* Busio */,
+				4D8713FE643F39CAD0566808 /* BusioWidgets */,
+				0506378608310116BCC63620 /* Config */,
+				B7030C0041B22C97B5F804F3 /* Packages */,
+				FC4AE52E0234000D85B7FCE1 /* Shared */,
+				7A8161FDDA7D9E55D74A9675 /* Frameworks */,
+				FBCD769CF0A09B8574E81B2B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EDAC2472C807106991FB3470 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				2CC61C4D83FA702B15EC8246 /* BusioApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		F5BD184F669F7D9800B34DF3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				38ED6537431DC975FDFD09D0 /* Assets.xcassets */,
+				7883C0FEDD8F7177C0C7E276 /* Seed */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		FBCD769CF0A09B8574E81B2B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A044B1771A1287D85F2849C1 /* Busio.app */,
+				C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FC4AE52E0234000D85B7FCE1 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				6BFE6FE12F1BB61AAE5F8827 /* Intents */,
+				AB36634C22E8455A22A8B006 /* AppEnvironment.swift */,
+				67851939FEFA1A95AD28EB23 /* CommuteActivity.swift */,
+				36FD3F8E002B62FA2A4A5D04 /* CommuteAlerts.swift */,
+				61FB3F6EDB14E0E1077451C4 /* CommuteRefresher.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4D72FC2905FEDADFC84F2541 /* Busio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F28E9575A6A064612E8ADD98 /* Build configuration list for PBXNativeTarget "Busio" */;
+			buildPhases = (
+				A9F1DCC78EFA3F66B73EAA27 /* Sources */,
+				9CC603CE2D74A030C01F5E2F /* Resources */,
+				47A2889CCE1C8610A941422E /* Frameworks */,
+				96BFA12D75B4B86F8A40D24B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D569C549D1432B8B49DA4F52 /* PBXTargetDependency */,
+			);
+			name = Busio;
+			packageProductDependencies = (
+				F49AA9DF1D6E22C0D5FC68D9 /* BusioKit */,
+			);
+			productName = Busio;
+			productReference = A044B1771A1287D85F2849C1 /* Busio.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7915125E292071179F3BF44F /* BusioWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8F8CCCB46E7D41BC090B8EE /* Build configuration list for PBXNativeTarget "BusioWidgets" */;
+			buildPhases = (
+				E9541AAE3DDD23934D7BEFD1 /* Sources */,
+				83BC6AB8AE8B87ED33E9BDB2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BusioWidgets;
+			packageProductDependencies = (
+				9D5D51C5B0D6D4ADE5C3DDB9 /* BusioKit */,
+			);
+			productName = BusioWidgets;
+			productReference = C230106ACF6206FAD73D13E3 /* BusioWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5C008D1F4EA2BAC71DAF0B6D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4D72FC2905FEDADFC84F2541 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					7915125E292071179F3BF44F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1763D9D7C159F333F700711F /* Build configuration list for PBXProject "Busio" */;
+			developmentRegion = fr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				fr,
+			);
+			mainGroup = E4136CE89A75947DC82EAC25;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3611ED607D355B5EE3FD7A2A /* XCLocalSwiftPackageReference "BusioKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FBCD769CF0A09B8574E81B2B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4D72FC2905FEDADFC84F2541 /* Busio */,
+				7915125E292071179F3BF44F /* BusioWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9CC603CE2D74A030C01F5E2F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				929A17BD7923257A5F24217C /* Assets.xcassets in Resources */,
+				9FCB115339AF1C1D1E0E28F0 /* Seed in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A9F1DCC78EFA3F66B73EAA27 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3E7FA85F12F872523719F94F /* AppEnvironment.swift in Sources */,
+				E8D00D4528BEF7073FEA7872 /* BusioApp.swift in Sources */,
+				8996544778F7D12A33695C01 /* CommuteActivity.swift in Sources */,
+				EC8888DE27D8D8D70F23EBAF /* CommuteAlerts.swift in Sources */,
+				82978FFC0B1043AAE95744EA /* CommuteIntents.swift in Sources */,
+				345D1F2722543C3D0C9D7D42 /* CommuteRefresher.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9541AAE3DDD23934D7BEFD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F63337FBC34690EEC64581A2 /* AppEnvironment.swift in Sources */,
+				72BB6A064CB752A609CFBBE6 /* BusioWidgetsBundle.swift in Sources */,
+				5F9AF6ACE85C62C2584F3CB5 /* CommuteActivity.swift in Sources */,
+				C7A9302D0B3F8D0BE63B1DB2 /* CommuteAlerts.swift in Sources */,
+				DAB54934E98B74573D5885AE /* CommuteIntents.swift in Sources */,
+				2D4553D3DD961B6EC223AB0B /* CommuteLiveActivity.swift in Sources */,
+				D75DFF13847A860BBBC272A9 /* CommuteRefresher.swift in Sources */,
+				6BBC40F27EEB19DB0495A903 /* CommuteWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D569C549D1432B8B49DA4F52 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7915125E292071179F3BF44F /* BusioWidgets */;
+			targetProxy = 2EC18F9FE7BC2707B0835ADC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D9DD1BD088A9066DE6897CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BusioWidgets/BusioWidgets.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BusioWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Busio;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUSIO_BUNDLE_ID).widgets";
+				PRODUCT_NAME = BusioWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2D17CD4FAC9D7BAB77CB1061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BusioWidgets/BusioWidgets.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BusioWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Busio;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUSIO_BUNDLE_ID).widgets";
+				PRODUCT_NAME = BusioWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3EF7230EE29F6FF35163557A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AAFF94BF55A8B4CE3D44B4E5 /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		785D847E06A1BFE68C77E1E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AAFF94BF55A8B4CE3D44B4E5 /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		8C06CAC614113B9A14405507 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Busio/Busio.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Busio/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Busio;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Busio utilise ta position pour trouver les arrêts proches et calculer le temps de marche jusqu'à ton bus.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUSIO_BUNDLE_ID)";
+				PRODUCT_NAME = Busio;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9904387BF2F9939000368538 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Busio/Busio.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Busio/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Busio;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Busio utilise ta position pour trouver les arrêts proches et calculer le temps de marche jusqu'à ton bus.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUSIO_BUNDLE_ID)";
+				PRODUCT_NAME = Busio;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1763D9D7C159F333F700711F /* Build configuration list for PBXProject "Busio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3EF7230EE29F6FF35163557A /* Debug */,
+				785D847E06A1BFE68C77E1E9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D8F8CCCB46E7D41BC090B8EE /* Build configuration list for PBXNativeTarget "BusioWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D17CD4FAC9D7BAB77CB1061 /* Debug */,
+				0D9DD1BD088A9066DE6897CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F28E9575A6A064612E8ADD98 /* Build configuration list for PBXNativeTarget "Busio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9904387BF2F9939000368538 /* Debug */,
+				8C06CAC614113B9A14405507 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3611ED607D355B5EE3FD7A2A /* XCLocalSwiftPackageReference "BusioKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = BusioKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9D5D51C5B0D6D4ADE5C3DDB9 /* BusioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BusioKit;
+		};
+		F49AA9DF1D6E22C0D5FC68D9 /* BusioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BusioKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 5C008D1F4EA2BAC71DAF0B6D /* Project object */;
+}

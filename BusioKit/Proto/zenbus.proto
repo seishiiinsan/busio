@@ -1,0 +1,341 @@
+// Sous-ensemble du protocole temps réel Zenbus (https://zenbus.net/poll/cdn/zenbus.proto).
+//
+// Seuls les messages utiles à Busio sont gardés. Les numéros de champs sont
+// identiques à l'original : les champs retirés sont simplement ignorés au
+// décodage (règle proto3 des champs inconnus).
+//
+// Régénérer : make proto
+syntax = "proto3";
+
+package zenbus_realtime;
+
+// Réponse de GET /publicapp/poll?alias=…[&itinerary=…]
+message LiveMessage {
+	repeated Timetable timetable = 1;
+	repeated TripColumn tripColumn = 2;
+	int64 start_processing = 3;	// UTC millis
+	int64 end_processing = 4;	// UTC millis
+	int64 version = 5;
+	repeated WallMessage messages = 6;
+}
+
+// Réponse de GET /publicapp/static-data?alias=…
+message StaticMessage {
+	repeated Line line = 1;
+	repeated Itinerary itinerary = 2;
+	repeated Shape shape = 3;
+	repeated Mission mission = 4;
+	repeated Stop stop = 5;
+	int64 version = 6;
+	int64 start_processing = 7;
+	int64 end_processing = 8;
+	Resource resource = 9;
+}
+
+message Point {
+	float latitude = 1;
+	float longitude = 2;
+}
+
+message Pos {
+	float latitude = 1;
+	float longitude = 2;
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 3;
+		int64 utc_millis = 4;
+	}
+	float accuracy = 7;	// mètres
+	float heading = 8;
+	float speed = 9;	// m/s
+}
+
+message Stop {
+	int64 stop_id = 1;
+	Point center = 2;
+	string name = 3;
+	string code = 4;
+	oneof parent_oneof {
+		int64 parent_id = 5;
+	}
+	Type location_type = 7;
+	WheelchairBoarding wheelchair_boarding = 8;
+	string description = 100;
+	string display_short_name = 101;
+	string display_long_name = 102;
+	Point ne = 200;
+	Point sw = 201;
+	bool start_of_trip = 202;
+	bool end_of_trip = 203;
+	enum Type {
+		STOP_OR_PLATFORM = 0;
+		STATION = 1;
+		ENTRANCE_OR_EXIT = 2;
+		GENERIC_NODE = 3;
+		BOARDING_AREA = 4;
+	}
+	enum WheelchairBoarding {
+		UNKNOWN = 0;
+		ACCESSIBLE = 1;
+		INACCESSIBLE = 2;
+	}
+	message Reference {
+		oneof stop_oneof {
+			int64 stop_id = 1;
+		}
+	}
+	message Anchor {
+		oneof stop_oneof {
+			int64 stop_id = 1;
+		}
+		int32 distance_travelled = 3;	// mètres depuis le premier arrêt
+		int32 stop_index_in_itinerary = 4;
+		int32 stop_index = 5;
+	}
+}
+
+message Mission {
+	int64 mission_id = 1;
+	oneof shape_oneof {
+		int64 shape_id = 2;
+		int64 itinerary_id = 4;
+	}
+	repeated Stop.Anchor anchor = 6;
+	string trip_headsign = 7;
+}
+
+message Shape {
+	int64 shape_id = 1;
+	oneof itinerary_oneof {
+		int64 itinerary_id = 2;
+	}
+	repeated Stop.Anchor anchor = 5;
+	oneof path_oneof {
+		Points points = 6;
+		Segments segments = 7;
+	}
+	message Reference {
+		oneof shape_oneof {
+			int64 shape_id = 1;
+		}
+	}
+	message Segments {
+		repeated Shape.Reference shape_reference = 1;
+	}
+	message Points {
+		repeated Point point = 1;
+	}
+}
+
+message Itinerary {
+	int64 itinerary_id = 1;
+	oneof line_oneof {
+		int64 line_id = 2;
+	}
+	repeated Stop.Reference stop_ref = 4;
+	string name = 5;
+}
+
+message Line {
+	int64 line_id = 1;
+	string name = 2;
+	string desc = 3;
+	string code = 4;
+	string display_short_name = 5;
+	string display_long_name = 6;
+	string color = 7;
+	string textColor = 8;
+	enum Type {
+		TRAM = 0;
+		METRO = 1;
+		RAIL = 2;
+		BUS = 3;
+		FERRY = 4;
+		CABLECAR = 5;
+		GONDOLA = 6;
+		FUNICULAR = 7;
+	}
+	Line.Type type = 9;
+	int32 route_sort_order = 10;
+}
+
+message CalendarPattern {
+	repeated int32 yyyymmdd = 1;
+}
+
+message Timetable {
+	int64 timetable_id = 1;
+	oneof itinerary_oneof {
+		int64 itinerary_id = 2;
+	}
+	oneof yyyymmdd_oneof {
+		int32 yyyymmdd = 4;
+		CalendarPattern calPattern = 5;
+	}
+	int64 midnight = 6;	// secondes UTC du minuit local du jour de service
+	repeated TripColumn column = 7;
+}
+
+enum JtfsScheduleRelationshipDescriptor {
+	UNKNOWN = 0;
+	SCHEDULED_PLANNED = 1;
+	DEMAND_RESPONSIVE_NOT_BOOKED_PLANNED = 2;
+	DEMAND_RESPONSIVE_BOOKED_PLANNED = 3;
+	AUTO_ADHOC_TIMERANGE_PLANNED = 4;
+	FREQUENCY_PLANNED = 5;
+	SCHEDULED_LIVE = 100;
+	ADDED_LIVE = 101;
+	UNSCHEDULED_LIVE = 102;
+	CANCELED_LIVE = 103;
+	AUTO_ADHOC_LIVE = 200;
+	DEMAND_RESPONSIVE_LIVE = 201;
+	ROAMING_LIVE = 300;
+	NO_PASSENGER_LIVE = 400;
+	NO_TRIP_LIVE = 401;
+	STATS_ADHOC = 500;
+}
+
+enum TripStatus {
+	NONE = 0;
+	UNSURE = 1;
+	SURE = 2;
+	ARCHIVED = 3;
+}
+
+message StopTime {
+	oneof stop_in_itinerary_oneof {
+		int32 stop_index_in_itinerary = 1;
+	}
+	oneof stop_in_mission_oneof {
+		int32 stop_index_in_mission = 3;
+	}
+	int32 arrival = 5;		// secondes après minuit
+	int32 departure = 6;		// secondes après minuit
+	int32 arriparture = 7;		// secondes après minuit (théorique ambigu)
+	int32 actual_time_at_stop = 8;
+	enum OccupancyStatus {
+		UNKNOWN = 0;
+		EMPTY = 1;
+		MANY_SEATS_AVAILABLE = 2;
+		FEW_SEATS_AVAILABLE = 3;
+		STANDING_ROOM_ONLY = 4;
+		CRUSHED_STANDING_ROOM_ONLY = 5;
+		FULL = 6;
+		NOT_ACCEPTING_PASSENGERS = 7;
+	}
+	StopTime.OccupancyStatus occupancyStatus = 15;
+	string trip_headsign = 100;
+	bool no_time = 17;
+}
+
+message TripColumn {
+	repeated StopTime aimed = 1;
+	int32 previous_index_in_itinerary = 2;
+	int32 target_index_in_itinerary = 3;
+	repeated StopTime estimactual = 4;
+	repeated Pos pos = 5;
+	oneof col_index_or_id_oneof {
+		TripColumn.Id id = 6;
+		int32 col_index = 7;
+	}
+	oneof yyyymmdd_oneof {
+		int32 yyyymmdd = 8;
+		CalendarPattern calPattern = 9;
+	}
+	oneof itinerary_oneof {
+		int64 itinerary_id = 10;
+	}
+	oneof vehicle_oneof {
+		int64 vehicle_id = 12;
+	}
+	JtfsScheduleRelationshipDescriptor jtfs_schedule_relationship_descriptor = 14;
+	TripStatus trip_status = 15;
+	string trip_short_name = 16;
+	string trip_headsign = 17;
+	oneof timetable_oneof {
+		int64 timetable_id = 100;
+	}
+	oneof shape_oneof {
+		int64 shape_id = 102;
+	}
+	oneof line_oneof {
+		int64 line_id = 104;
+	}
+	int64 midnight = 106;	// secondes UTC
+	int32 previous_index_in_mission = 1000;
+	int32 target_index_in_mission = 1001;
+	oneof mission_oneof {
+		int64 mission_id = 1002;
+	}
+	repeated Pos pos_matched = 1005;
+	int32 distance_travelled = 1006;
+	int64 modified = 1100;	// UTC millis
+	message Id {
+		int32 timetable_index = 1;
+		int32 col_index = 2;
+		string trip_id = 9;
+	}
+}
+
+message Resource {
+	int64 id = 1;
+	repeated int32 yyyymmdd = 2;
+}
+
+message WallMessage {
+	int64 msg_id = 2;
+	repeated AlertMessage.EntitySelector informed_entity = 102;
+	int64 notify_start = 4;
+	int64 notify_end = 5;
+	int64 event_start = 6;
+	int64 event_end = 7;
+	int64 created = 8;
+	int64 modified = 9;
+	int64 deleted = 10;
+	AlertMessage.Cause cause = 11;
+	AlertMessage.Effect effect = 12;
+	AlertMessage.Priority priority = 13;
+	string message = 14;
+	string short_message = 15;
+}
+
+message AlertMessage {
+	message EntitySelector {
+		int64 workspace_id = 1;
+		int64 line_id = 2;
+	}
+	enum Cause {
+		UNKNOWN_CAUSE = 0;
+		INFORMATION = 1;
+		TECHNICAL_PROBLEM = 2;
+		STRIKE = 3;
+		DEMONSTRATION = 4;
+		ACCIDENT = 5;
+		HOLIDAY = 6;
+		WEATHER = 7;
+		MAINTENANCE = 8;
+		CONSTRUCTION = 9;
+		POLICE_ACTIVITY = 10;
+		MEDICAL_EMERGENCY = 11;
+		EVENT = 12;
+		OTHER_CAUSE = 13;
+	}
+	enum Effect {
+		UNKNOWN = 0;
+		NO_SERVICE = 1;
+		REDUCED_SERVICE = 2;
+		SIGNIFICANT_DELAYS = 3;
+		DETOUR = 4;
+		ADDITIONAL_SERVICE = 5;
+		MODIFIED_SERVICE = 6;
+		OTHER_EFFECT = 7;
+		UNKNOWN_EFFECT = 8;
+		STOP_MOVED = 9;
+		NO_EFFECT = 10;
+		ACCESSIBILITY_ISSUE = 11;
+	}
+	enum Priority {
+		LOW = 0;
+		MEDIUM = 1;
+		HIGH = 2;
+	}
+}

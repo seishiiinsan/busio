@@ -1,0 +1,1176 @@
+syntax = "proto3";
+
+option java_package = "net.zenbus.realtime.proto";
+package zenbus_realtime;
+option java_multiple_files = true;
+
+/*
+ * Self sufficient file, no dependency, but plenty in common with other projects (not created from scratch in a void / ivory tower ^^)
+ * 
+ * Timestamps are a bit weird for stupid micro-optims reasons, and not-so-stupid readability/interpretability reasons.
+ * (some are "real timestamps" in UTC millis, some are relative, in seconds elapsed since midnight, and some...)
+ */
+
+message LiveMessage {
+	repeated Timetable timetable = 1;
+	repeated TripColumn tripColumn = 2;
+	
+	int64 start_processing = 3;	// UTC millis
+	int64 end_processing = 4;	// UTC millis
+	
+	int64 version = 5;
+	
+	repeated WallMessage messages = 6;
+	
+}
+
+message LiveVehicleMessage {
+	TripColumn currentColumn = 1;				// itinerary or itineraryId is set if assigned, else vehicle is assume to be not assigned
+	repeated TripColumn previousColumns = 2;	// list of all achieved trips
+	
+	int64 start_processing = 3;	// UTC millis
+	int64 end_processing = 4;	// UTC millis
+	
+	int64 version = 5;
+}
+
+message StaticMessage {
+	repeated Line line = 1;
+	repeated Itinerary itinerary = 2;
+	repeated Shape shape = 3;
+	repeated Mission mission = 4;
+	repeated Stop stop = 5;
+	
+	int64 version = 6;
+	
+	int64 start_processing = 7;
+	int64 end_processing = 8;
+	
+	Resource resource = 9;
+	
+}
+
+message StopMonitoringMessage {
+	repeated TripColumn tripColumn = 1;
+	repeated Stop.Anchor anchor = 2;
+	Stop stop = 3;
+	int64 midnight = 4;		// utc seconds
+	int64 version = 5;
+	
+	int64 start_processing = 6;
+	int64 end_processing = 7;
+}
+
+message PassengerInformationTerminalMessage {
+	PITMapConfig map_config = 1;
+	PITDisplayConfig display_config = 2;
+	repeated Stop.Reference stop = 3;
+	repeated Line.Reference line = 4;
+	
+	int64 version = 5;
+
+	message PITMapConfig {
+		Point terminalCoords = 1;
+		Point mapCenter = 3;
+		int32 mapZoom = 4;
+		int32 fullProgressBarMinutes = 7;
+		
+	}
+	message PITDisplayConfig {
+		string name = 1;
+		bool ignoreEta = 2;
+		bool useMiles = 3; 
+		int32 switchBetweenStopSeconds = 4;
+		int32 activeStartTime = 5;
+		int32 activeEndTime = 6;
+		repeated string logos = 7;
+		string cssPath = 8;
+		int32 autoReloadTime = 9;
+		int64 forceReloadAt = 10;
+	}
+	
+	int64 start_processing = 6;
+	int64 end_processing = 7;
+}
+
+message DiagnosticMessage {
+	TripColumn tripColumn = 1; // vehicle data
+	repeated Provider provider = 2;
+	repeated Timetable timetable = 3;
+
+	StaticMessage  static_data = 4;
+	
+	int64 version = 5;
+	
+	repeated ResolvedDeclarationEvent resolved = 6;
+	
+	int64 start_processing = 7;
+	int64 end_processing = 8;
+}
+
+message WallMessages {
+	repeated WallMessage messages = 1;
+	repeated WallMessageAuthor authors = 2;
+	
+	int64 version = 3;
+}
+
+message DriverAlertMessages {
+	repeated DriverAlert alerts = 1;
+	int64 version = 2;
+}
+
+message SingleProviderPost {
+	repeated Pos pos = 1;				// a batch of positions (not strictly required, but why POST otherwise?)
+	oneof provider_oneof {				// whoami (producing the data) (required)
+		Provider provider = 2;			// verbose but self-describing (rarely used option)
+		int64 provider_id = 3;			// datastore id
+	}
+	oneof vehicle_oneof {				// whoami (which vehicle) (optional and checked for consistency anyway, but it's good practice to fill it)
+		Vehicle vehicle = 4;			// verbose but self-describing (rarely used option)
+		int64 vehicle_id = 5;			// datastore id
+	}
+	DeclarationEvent declaration = 6;	// stateful (you may add it to each and every requested, but it's not expected and moderately bad practice)
+	repeated StopTime count = 7;		// stateful occupancy and stuff
+
+	repeated DriverAlert driver_alert = 8;	// driver message(s)
+	repeated DriverAlert.Action driver_alert_action = 9;   // driver action on existing message(s)
+}
+
+message DailyStopTimes {
+	repeated TripColumn trip_column = 1;
+	StaticMessage static_message = 2;
+	repeated AboutVehicle vehicles = 3;
+}
+
+// early draft
+message AboutVehicle {
+	oneof vehicle_oneof {
+		Vehicle vehicle = 1;
+		int64 vehicle_id = 2;
+	}
+	repeated Pos pos = 3;
+	repeated TripColumn tripColumn = 4;
+}
+
+message Point {
+	float latitude = 1;
+	float longitude = 2;
+}
+
+message Pos {
+	float latitude = 1;			// the usual WGS84
+	float longitude = 2;		// the usual WGS84
+	
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 3;
+		int64 utc_millis = 4;	// use this in provider API
+	}
+
+	// reference to source provider (optional, depending on context)
+	oneof provider_oneof {
+		int64 provider_id = 5;
+		Provider provider = 6;
+	}
+	
+	float accuracy = 7;			// meters
+	float heading = 8;			// sometimes also called "bearing"
+	
+	// TODO add optional W3CLocation fields
+	float speed = 9; // meters per second
+	
+}
+
+message Vehicle {
+	int64 vehicle_id = 1;
+	Line.Type vehicle_type = 2;
+	string license_plate = 3;
+	string label = 4;
+	
+	string driver = 5;
+	int64 driver_timestamp = 6;
+	
+	int32 passenger_capacity = 7;
+	
+	message Reference {
+		oneof vehicle_oneof {
+			int64 vehicle_id = 1;
+			Vehicle vehicle = 2;
+		}
+	}
+	
+	// used for diagnostic
+	oneof current_block_oneof {
+		int64 block_id = 1004;
+		Block block = 1005;
+	}
+	// blocks for a day
+	repeated Block blocks = 1006;
+}
+
+// used in diagnostic
+message Block {
+	int64 block_id = 1;
+	repeated TripColumn actual = 2;
+	repeated TripColumn rule = 3;
+	string block_name = 4;
+}
+
+message Provider {
+	int64 provider_id = 1;
+	string name = 2;
+	repeated string deviceId = 3;
+	repeated string source = 4;  
+	
+	enum Type {
+		UNKNOWN = 0;
+		ZENBUS_ANDROID_APP = 1;
+		CAPTE = 2;
+		VENTRATA = 3;
+		UBI = 4;
+		HUBUP = 5;
+		TRAXGO = 6;
+		OOCLOCK = 7;
+		REUNIR = 8;
+		WEBREATHE = 9;
+		AGILTECH = 10;
+		PILOTFISH = 11;
+		LUMIPLAN = 12;
+		IRIS = 13;
+		STREAMAX = 14;
+	}
+	Provider.Type type = 5;
+	ProviderConfig config = 6;
+	repeated ProviderBattery battery = 7;
+	repeated ProviderEvent event = 10;
+
+	// used for diagnostic
+	ProviderLatency latency = 101;
+	string remote_addr = 102;
+	int64 owner = 103;
+	
+	message Reference {
+		oneof provider_oneof {
+			int64 provider_id = 8;
+			Provider provider = 9;
+		}
+	}
+}
+
+message ProviderBattery {
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 1;
+		int64 utc_millis = 2;	// provider API
+	}
+	int32 percent = 3;
+	bool plugged = 4;
+}
+
+message ProviderConfig {
+	string android_version = 1;
+	string app_version = 2;
+	
+	bool doze_mode = 3;
+	bool wifi_scan = 4;
+	
+	bool start_on_boot = 5;
+	bool start_on_alim = 6;
+	
+	int32 low_batt = 7;
+	
+	bool readonly_mode = 8;
+}
+
+message ProviderEvent {
+	int32 code = 1;
+	
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 2;
+		int64 utc_millis = 3;	// provider API
+	}
+	
+	string data = 4;
+}
+
+message ProviderLatency{
+	repeated string api_key = 1;
+	int32 midnight = 2;		// utc seconds
+	
+	repeated ProviderLatency.Latency latency = 3;
+	
+	message Latency {
+		int32 api_key_index = 1;
+		int32 last_pos_src = 2;
+		int32 src_mask = 3;
+		int32 n_pos = 4;
+		
+		oneof localtime_oneof {
+			int32 seconds_after_midnight = 5;
+			int32 millis_after_midnight = 6;
+		}
+		
+		int32 min_latency = 7;
+		int32 max_latency = 8;
+	}
+}
+
+message Stop {
+	int64 stop_id = 1;
+	Point center = 2;
+	string name = 3;
+	string code = 4;
+
+	oneof parent_oneof {
+		int64 parent_id = 5;
+		Stop parent = 6;
+	}
+
+	Type location_type = 7;
+	WheelchairBoarding wheelchair_boarding = 8;	// should be frequent. Come on, it's important
+
+	// less frequent
+	string description = 100;
+	string display_short_name = 101;
+	string display_long_name = 102;
+
+	// bounding box
+	Point ne = 200;
+	Point sw = 201;
+
+	bool start_of_trip = 202;	// some missions may start there
+	bool end_of_trip = 203;	// some mission may end there
+
+	enum Type {
+		STOP_OR_PLATFORM = 0;
+		STATION = 1;
+		ENTRANCE_OR_EXIT = 2;
+		GENERIC_NODE = 3;
+		BOARDING_AREA = 4;
+	}
+
+	enum WheelchairBoarding {
+		UNKNOWN = 0;
+		ACCESSIBLE = 1;
+		INACCESSIBLE = 2;
+	}
+
+	message Reference {
+		oneof stop_oneof {
+			int64 stop_id = 1;
+			Stop stop = 2;
+		}
+	}
+
+	message Anchor {
+		// stop reference
+		oneof stop_oneof {
+			int64 stop_id = 1;
+			Stop stop = 2;
+		}
+		int32 distance_travelled = 3;	// in meters. First value should be 0 (for the first stop). Last is ofc total length in meters (when reaching last stop)
+		int32 stop_index_in_itinerary = 4;	// might be omitted if consistently generated by naive default algorithm
+		int32 stop_index = 5;	// index in the current sequence (mission index, shape index...)
+		Itinerary.Reference itinerary = 6;
+	}
+}
+
+message Mission {
+	int64 mission_id = 1;
+
+	oneof shape_oneof {		// missions might have no shape
+		int64 shape_id = 2;
+		Shape shape = 3;
+		int64 itinerary_id = 4;
+		Itinerary itinerary = 5;
+	}
+
+	repeated Stop.Anchor anchor = 6;
+
+	string trip_headsign = 7;
+
+	message Reference {
+		oneof mission_oneof {
+			int64 mission_id = 1;
+			Mission mission = 2;
+		}
+	}
+}
+
+message Shape {
+	int64 shape_id = 1;
+
+	oneof itinerary_oneof {
+		int64 itinerary_id = 2;
+		Itinerary itinerary = 3;
+	}
+
+	repeated Stop.Anchor anchor = 5;
+
+	oneof path_oneof {
+		Points points = 6;
+		Segments segments = 7;
+	}
+
+	message Reference {
+		oneof shape_oneof {
+			int64 shape_id = 1;
+			Shape shape = 2;
+		}
+	}
+
+	message Segments {
+		repeated Shape.Reference shape_reference = 1;
+	}
+
+	message Points {
+//		repeated float latitudes = 1;
+//		repeated float longitudes = 2;
+		repeated Point point = 1;	// TODO (Conan) what's best (in life)?
+	}
+}
+
+message Itinerary {
+	int64 itinerary_id = 1;
+
+	oneof line_oneof {
+		int64 line_id = 2;
+		Line line = 3;
+	}
+
+	repeated Stop.Reference stop_ref = 4;	// not anchors
+	
+	string name = 5;
+
+	message Reference  {
+		oneof itinerary_oneof {
+			int64 itinerary_id = 1;
+			Itinerary itinerary = 2;
+		}
+	}
+}
+
+message Line {
+	int64 line_id = 1;
+	string name = 2;	// route long name in GTFS
+	string desc = 3;
+	string code = 4;	// route short name
+	string display_short_name = 5;
+	string display_long_name = 6;
+	string color = 7;
+	string textColor = 8;
+
+	enum Type {
+		TRAM = 0;		// Tram, Streetcar, Light rail. Any light rail or street level system within a metropolitan area.
+		METRO = 1;		// Subway, Metro. Any underground rail system within a metropolitan area.
+		RAIL = 2;		// Rail. Used for intercity or long-distance travel.
+		BUS = 3;		// Bus. Used for short- and long-distance bus routes.
+		FERRY = 4;		// Ferry. Used for short- and long-distance boat service.
+		CABLECAR = 5;	// Cable car. Used for street-level cable cars where the cable runs beneath the car.
+		GONDOLA = 6;	// Gondola, Suspended cable car. Typically used for aerial cable cars where the car is suspended from the cable.
+		FUNICULAR = 7;	// Funicular. Any rail system designed for steep inclines.
+		// TODO https://developers.google.com/transit/gtfs/reference/extended-route-types
+	}
+	Line.Type type = 9;
+
+	int32 route_sort_order = 10;
+
+	message Reference {
+		oneof line_oneof {
+			int64 line_id = 2;
+			Line line = 3;
+		}
+	}
+}
+
+message CalendarPattern {
+	repeated int32 yyyymmdd = 1;
+}
+
+message Timetable {
+	int64 timetable_id = 1;
+
+	oneof itinerary_oneof {
+		int64 itinerary_id = 2;
+		Itinerary itinerary = 3;
+	}
+
+	oneof yyyymmdd_oneof {
+		int32 yyyymmdd = 4;
+		CalendarPattern calPattern = 5;
+	}
+
+	int64 midnight = 6;	// UTC seconds
+
+	repeated TripColumn column = 7;
+}
+
+enum JtfsScheduleRelationshipDescriptor {
+	UNKNOWN = 0;
+
+	//Planned
+	SCHEDULED_PLANNED = 1;
+	DEMAND_RESPONSIVE_NOT_BOOKED_PLANNED = 2;
+	DEMAND_RESPONSIVE_BOOKED_PLANNED = 3;
+	AUTO_ADHOC_TIMERANGE_PLANNED = 4;
+	FREQUENCY_PLANNED = 5;
+
+	//GTFS-RT
+	SCHEDULED_LIVE = 100;
+	ADDED_LIVE = 101;
+	UNSCHEDULED_LIVE = 102;
+	CANCELED_LIVE = 103;
+
+	//JTFS-RT DLC ^^
+	AUTO_ADHOC_LIVE = 200;
+	DEMAND_RESPONSIVE_LIVE = 201;
+
+	//JTFS roaming
+	ROAMING_LIVE = 300;
+
+	//JTFS supervision
+	NO_PASSENGER_LIVE = 400;
+	NO_TRIP_LIVE = 401;
+	
+	//stats
+	STATS_ADHOC = 500;
+}
+
+enum TripStatus {
+	NONE = 0;
+	UNSURE = 1;
+	SURE = 2;
+	ARCHIVED = 3;
+}
+
+message CountGroup {
+	int64 count_group_id = 1;
+	string name = 2;
+}
+
+message StopTime {
+	oneof stop_in_itinerary_oneof {			// oneof because stop_index_in_itinerary is use for read and stop_in_itinerary Anchor is use for write
+		int32 stop_index_in_itinerary = 1;
+		Stop.Anchor stop_in_itinerary = 2;
+	}
+	oneof stop_in_mission_oneof {			// oneof because stop_index_in_mission is used for read and stop_in_mission Anchor is use for write
+		int32 stop_index_in_mission = 3;
+		Stop.Anchor stop_in_mission = 4;
+	}
+	int32 arrival = 5;				// Seconds relative to midnight. If actual, timestamp of arrival at stop (or first position within stop bounds if the vehicle didn't stop).
+	int32 departure = 6;			// Seconds relative to midnight. If actual, timestamp of departure from stop (or last position within stop bounds if the vehicle didn't stop).
+	int32 arriparture = 7;			// Seconds relative to midnight. Ambiguous aimed value.
+	int32 actual_time_at_stop = 8;	// Time spent at stop, duration in seconds (0 means the vehicle didn't stop. If the vehicle has stopped, is equal to departure - arrival).
+	PassengerTotal passenger_total = 13;
+	
+	repeated int64 group_id = 14;	// deprecated. Not removing it for (bad) historical reasons. Use a reference to the count group (via id) in the CountEvent, instead of depending on the order of the repeated data
+	repeated CountEvent countEvents = 30;	// FIXME ooops, someone pushed this in CamelCase?!?
+	
+	message CountEvent {
+		oneof count_oneof {	// it may seem weird, but we want to distinguish between explicitly/manually counting 0, and no information
+			PassengersBoardingAndLeaving passengers_boarding = 1;
+			PassengersBoardingAndLeaving passengers_leaving = 2;
+			PassengersBoardingAndLeaving passengers_boarding_and_leaving = 3;
+		}
+		oneof count_group_oneof {
+			int64 count_group_id = 4;
+			CountGroup count_group = 5;
+		}
+	}
+	
+	message PassengersBoardingAndLeaving {
+		int32 passengers_boarding = 1;
+		int32 passengers_leaving = 2;
+	}
+	
+	enum OccupancyStatus{
+		UNKNOWN = 0;
+		EMPTY = 1;
+		MANY_SEATS_AVAILABLE = 2;
+		FEW_SEATS_AVAILABLE = 3;
+		STANDING_ROOM_ONLY = 4;
+		CRUSHED_STANDING_ROOM_ONLY = 5;
+		FULL = 6;
+		NOT_ACCEPTING_PASSENGERS = 7;
+	}
+	
+	StopTime.OccupancyStatus occupancyStatus = 15;
+	
+	// infrequent
+	string trip_headsign = 100;
+	TripColumn trip_column = 16;
+	
+	bool no_time = 17;
+	
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 110;
+		int64 utc_millis = 111;
+	}
+	
+	message PassengerTotal {
+		int32 total_passengers = 1;
+		int32 passengers_percent = 2;
+	}
+}
+
+message TripEvent {
+	enum Type {
+		UNKNOWN = 0;
+		RELEASE = 1;
+		ASSIGN = 2;
+	}
+	// what, when
+	TripEvent.Type what = 1;
+	int32 yyyymmdd = 2;
+	int64 midnight = 3;		// utc seconds
+	int32 t = 4;
+
+	// if applicable, where
+	int32 previous_index_in_itinerary = 5;
+	int32 previous_index_in_mission = 6;
+	int32 target_index_in_itinerary = 7;
+	int32 target_index_in_mission = 8;
+	Pos pos = 9;
+
+	TripColumn trip = 10;	// usually omitted, or sparsely filled
+
+	oneof provider_oneof {
+		int32 provider_id = 11;
+		Provider provider = 12;
+	}
+
+	// data of what used to be called "restricted" and "override"
+	oneof mission_oneof {
+		int64 mission_id = 102;
+		Mission mission = 103;
+	}
+	oneof shape_oneof {
+		int64 shape_id = 104;
+		Shape shape = 105;
+	}
+	oneof itinerary_oneof {
+		int64 itinerary_id = 106;
+		Itinerary itinerary = 107;
+	}
+	oneof line_oneof {
+		int64 line_id = 108;
+		Line line = 109;
+	}
+
+	//
+	string desc = 200;
+}
+
+
+message DeclarationEvent {
+	oneof timestamp_oneof {
+		int64 timestamp = 1; // utc millis
+		int32 seconds_after_midnight = 11;
+	}
+	
+	oneof start_end_trip_oneof {
+		bool start_auto = 2;
+		bool start_deadhead = 3;
+	}
+
+	bool trip_only = 4;
+	bool unintended_deadhead_on_fallback_fail = 5;
+
+	bool allow_trip_not_started = 6;
+	bool trip_not_started = 7;
+	bool trip_not_ended = 8;
+
+	int64 block_id = 100;
+	
+	oneof line_oneof {
+		int64 line_id = 101;
+		Line line = 102;
+		string feed_line_id = 103;
+	}
+
+	oneof itinerary_x_day_or_timetable_oneof {
+		int64 itinerary_id = 104;
+		Itinerary itinerary = 105;
+		int64 timetable_id = 106;
+		Timetable timetable = 107;
+	}
+	
+	oneof mission_oneof {
+		int64 mission_id = 108;
+		Mission mission = 109;
+		string feed_mission_id = 110;
+	}
+	
+	string feed_trip_headsign_code = 111;
+	
+	oneof feed_trip_or_aimed_index_oneof {
+		string feed_trip_id = 112;
+		int32 aimed_index = 113;
+	}
+	
+	oneof  feed_planning_workspace_or_feed_dataset {
+		int64 feed_planning_workspace_id = 114;
+		string feed_dataset = 115;
+	}
+	
+	string feed_version = 116;
+	
+	string driver = 117;
+}
+
+message ResolvedDeclarationEvent {
+	enum State {
+		UNKNOWN = 0;
+		
+		NEEDS_TRANSLATION = 1;
+		NEEDS_RESOLUTION = 2;
+		
+		TRIP_RESOLVED = 3;
+		AUTO_RESTRICTED = 4;
+		DEADHEAD = 5;
+		AUTO = 6;
+
+		UNINTENDED_AUTO_RESTRICTED = 7;
+		UNINTENDED_DEADHEAD = 8;
+		UNINTENDED_AUTO = 9;
+	}
+	
+	ResolvedDeclarationEvent.State state = 1;
+	
+	oneof timestamp_oneof {
+		int64 timestamp = 2; // utc millis
+		int32 seconds_after_midnight = 21;
+	}
+	
+	DeclarationEvent resolved = 3;
+
+	// optional in the nominal case (no translation, no fallbacks)
+	DeclarationEvent src = 4;
+}
+
+
+
+
+message TripColumn  {
+	// most frequently occurring: the actual data (aimed + live state)
+	repeated StopTime aimed = 1;
+
+	int32 previous_index_in_itinerary = 2;
+	int32 target_index_in_itinerary = 3;
+
+	repeated StopTime estimactual = 4;
+	repeated Pos pos = 5;
+
+	oneof col_index_or_id_oneof {
+		TripColumn.Id id = 6;
+		// also very frequent: "vehicle or trip descriptor"
+		int32 col_index = 7;	// part of trip id
+	}
+
+	oneof yyyymmdd_oneof {
+		int32 yyyymmdd = 8;
+		CalendarPattern calPattern = 9;
+	}
+	oneof itinerary_oneof {
+		int64 itinerary_id = 10;
+		Itinerary itinerary = 11;
+	}
+	oneof vehicle_oneof {
+		int64 vehicle_id = 12;
+		Vehicle vehicle = 13;
+	}
+	JtfsScheduleRelationshipDescriptor jtfs_schedule_relationship_descriptor = 14;
+	TripStatus trip_status = 15;
+	TripColumn.TripNature trip_nature = 19;
+
+	string trip_short_name = 16;
+	string trip_headsign = 17;
+
+	Frequency frequency = 18;
+
+	string bestiary_code = 20;
+
+	// usually implicit
+	oneof timetable_oneof {
+		int64 timetable_id = 100;
+		Timetable timetable = 101;
+	}
+
+	oneof shape_oneof {
+		int64 shape_id = 102;
+		Shape shape = 103;
+	}
+
+	oneof line_oneof {
+		int64 line_id = 104;
+		Line line = 105;
+	}
+
+	int64 midnight = 106;		// utc seconds
+
+	// more details
+	repeated TripEvent timeline = 200;
+
+	oneof currently_oneof {
+		DeclarationEvent declaring = 201;
+		ResolvedDeclarationEvent resolved = 202;
+	}
+
+	// even more details, verbose response, debug...
+
+	int32 previous_index_in_mission = 1000;
+	int32 target_index_in_mission = 1001;
+
+	oneof mission_oneof {
+		int64 mission_id = 1002;
+		Mission mission = 1003;
+	}
+
+	repeated int32 x_matched = 1004;
+	repeated Pos pos_matched = 1005;
+
+	int32 distance_travelled = 1006;
+
+	int64 modified = 1100;
+
+	message Id {
+		int32 timetable_index = 1;
+		int32 col_index = 2;
+		string trip_id = 9;
+
+		oneof yyyymmdd_oneof {
+			int32 yyyymmdd = 3;
+			CalendarPattern calPattern = 4;
+		}
+
+		oneof table_oneof {
+			int64 itinerary_id = 5;
+			Itinerary itinerary = 6;
+			int64 timetable_id = 7;
+			Timetable timetable = 8;
+		}
+	}
+	oneof timestamp_oneof {
+		int32 seconds_after_midnight = 1010;
+		int64 utc_millis = 1011;
+	}
+
+	enum TripNature {
+		NONE = 0;
+		LIVE = 1;
+		STATS = 2;
+		DECLARATION = 3;
+	}
+}
+
+message Frequency {
+	oneof start_oneof {
+		int32 start_seconds_after_midnight = 18;
+		int64 start_utc_millis = 19;
+	}
+	oneof end_oneof {
+		int32 end_seconds_after_midnight = 20;
+		int64 end_utc_millis = 21;
+	}
+	int32 period_seconds = 22;
+}
+
+message Resource { 	
+ 	int64 id = 1;
+ 	repeated int32 yyyymmdd = 2;
+}
+
+message WallMessage { // TODO to deprecate, replace with AlertMessage
+
+	oneof resource_oneof { // TODO to deprecate
+		Resource resource = 1;
+		int64 about = 101;
+	}
+		
+	int64 msg_id = 2;
+	
+	enum Target {
+		UNKNOWN = 0;
+		WORKSPACE = 1;
+		LINE = 2;
+	}
+	
+	WallMessage.Target target = 3; // TODO to deprecate
+	
+	repeated AlertMessage.EntitySelector informed_entity = 102;
+	
+	int64 notify_start = 4;
+	int64 notify_end = 5;
+	
+	int64 event_start = 6;
+	int64 event_end = 7;
+	
+	int64 created = 8;
+	int64 modified = 9;
+	int64 deleted = 10;
+	
+	AlertMessage.Cause cause = 11;
+	
+	AlertMessage.Effect effect = 12;
+	
+	AlertMessage.Priority priority = 13;
+	
+	string message = 14;
+	
+	string short_message = 15;
+	
+	oneof author_oneof {
+		WallMessageAuthor author = 16;
+		int64 author_id = 17;
+	}
+	
+}
+
+message AlertMessage { // TODO use it 
+
+	message EntitySelector {
+		int64 workspace_id = 1;
+		int64 line_id = 2;
+	}
+	
+	repeated EntitySelector informed_entity = 1;
+	
+	int64 msg_id = 2;
+	
+	int64 notify_start = 4;
+	int64 notify_end = 5;
+	
+	int64 event_start = 6;
+	int64 event_end = 7;
+	
+	int64 created = 8;
+	int64 modified = 9;
+	int64 deleted = 10;
+	
+	enum Cause {
+		UNKNOWN_CAUSE = 0;
+		INFORMATION = 1;
+		TECHNICAL_PROBLEM = 2;
+		STRIKE = 3;
+		DEMONSTRATION = 4;
+		ACCIDENT = 5;
+		HOLIDAY = 6;
+		WEATHER = 7;
+		MAINTENANCE = 8;
+		CONSTRUCTION = 9;
+		POLICE_ACTIVITY = 10;
+		MEDICAL_EMERGENCY = 11;
+		EVENT = 12;
+		OTHER_CAUSE = 13;
+		
+	}
+	
+	Cause cause = 11;
+	
+	enum Effect {
+		UNKNOWN = 0;
+		NO_SERVICE = 1;
+		REDUCED_SERVICE = 2;
+		SIGNIFICANT_DELAYS = 3;
+		DETOUR = 4;
+		ADDITIONAL_SERVICE = 5;
+		MODIFIED_SERVICE = 6;
+		OTHER_EFFECT = 7;
+		UNKNOWN_EFFECT = 8;
+		STOP_MOVED = 9;
+		NO_EFFECT = 10;
+		ACCESSIBILITY_ISSUE = 11;
+	}
+	
+	Effect effect = 12;
+	
+	enum Priority {
+		LOW = 0;
+		MEDIUM = 1;
+		HIGH = 2;
+	}
+	
+	Priority priority = 13;
+	
+	string message = 14;
+	
+	string short_message = 15;
+	
+	oneof author_oneof {
+		WallMessageAuthor author = 16;
+		int64 author_id = 17;
+	}
+	
+}
+
+message WallMessageAuthor {
+
+	int64 id = 1;
+	string name = 2;
+	string icon = 3;
+	
+}
+
+message ActivitySummary {
+	repeated ActivityResourceSummary summary = 1;
+}
+
+message ActivityResourceSummary {
+
+	int32 nb_aimed_trips = 1;
+	int32 nb_actual_aimed_trips = 2;
+	int32 nb_added_trips = 3;
+
+	int32 nb_declared_trips = 4;
+
+	int32 lateness = 5;
+
+	int32 nb_stops_of_actual_aimed = 6;
+	int32 nb_stops_of_missing_aimed = 7;
+	int32 nb_stops_of_added = 8;
+
+	int32 nb_visited_stops_of_aimed = 9;
+	int32 nb_visited_stops_of_added = 10;
+
+	int32 nb_visited_last_stop_of_aimed = 11;
+	int32 nb_visited_last_stop_of_added = 12;
+
+	int32 aimed_distance_of_aimed = 13;
+	int32 aimed_distance_of_actual_aimed = 14;
+	int32 aimed_distance_of_added = 15;
+
+	int32 actual_distance_of_aimed = 16;
+	int32 actual_distance_of_added = 17;
+
+	int32 aimed_deadhead_distance_of_aimed = 18;
+	int32 actual_deadhead_distance_of_aimed = 19;
+	int32 actual_deadhead_distance_of_added = 20;
+
+	int64 vehicle = 21;
+	int64 line = 22;
+}
+
+message DriverAlert {
+	int64 alert_id = 1;
+
+    oneof provider_oneof {
+        Provider provider = 2;    // for response to readers
+        int64 provider_id = 3;
+    }
+    oneof vehicle_oneof {
+        Vehicle vehicle = 29;     // for response to readers
+        int64 vehicle_id = 30;
+    }
+
+	oneof creation_oneof {
+		int64 creation_utc_millis = 4;
+		int32 creation_seconds_after_midnight = 5;
+	}
+	int64 creation_midnight_secs = 6;
+
+	oneof modification_oneof {
+		int64 modification_utc_millis = 7;
+		int32 modification_seconds_after_midnight = 8;
+	}
+	int64 modification_midnight_secs = 9;
+
+	Category category = 10;
+	Status status = 11;
+
+    oneof status_timestamp_oneof {
+        int64 status_timestamp_utc_millis = 12;
+        int32 status_timestamp_seconds_after_midnight = 13;
+    }
+    int64 status_timestamp_midnight_secs = 14;
+
+	int64 block_id = 15;
+	repeated int64 block_line_id = 16;
+
+	string driver_name = 17;
+	string description = 18;
+
+	int64 trip_line_id = 19;
+	TripColumn.Id trip_id = 20;
+	string trip_short_name = 21;
+
+    ItineraryIndexes trip_itinerary_indexes = 22;
+
+	Pos pos = 23;
+
+	int64 stop_of_interest = 24;
+	bool call_requested = 25;
+	string stop_of_interest_name = 28;
+
+    // partially filled : who, what, when, no specific action fields
+    DriverAlert.Action latest_action_summary = 26;
+    repeated DriverAlert.Action actions = 27;
+
+	enum Category {
+		UNKNOWN = 0;
+		ROADWORKS = 1;
+		TRAFFIC_JAM = 2;
+		LATE = 3;
+		SAEIV_ISSUES = 4;
+		PASSENGER_TROUBLE = 5;
+		MEDICAL_EMERGENCY = 6;
+		STOP_SKIPPED = 7;
+		BROKEN_DOWN_VEHICLE = 8;
+		VEHICLE_ACCIDENT = 9;
+		VEHICLE_FULL = 10;
+		STOP_WRONG_LOCATION = 11;
+		BROKEN_DOWN_STOP = 12;
+		SOS = 13;
+		CALL_REQUESTED = 14;
+	}
+
+	enum Status {
+		OPEN = 0;
+		IN_PROGRESS = 1;
+		CLOSED_ACCEPTED = 2;
+		CLOSED_REJECTED = 3;
+	}
+
+    message ItineraryIndexes {
+	  int32 trip_previous_itinerary_index = 1;
+	  int32 trip_target_itinerary_index = 2;
+    }
+
+	message Action {
+		int64 action_id = 1;
+
+		int64 alert_id = 2;   // not needed if Action object is nested in its parent alert
+
+		// common action fields : what, when, who
+		ActionType type = 3;
+
+		oneof timestamp_oneof {
+			int64 timestamp_utc_millis = 4;
+			int32 timestamp_seconds_after_midnight = 5;
+		}
+		int64 timestamp_midnight_secs = 6;
+
+		string user = 7;
+		bool is_driver = 8;
+
+		// specific action type fields
+
+		// STATUS_CHANGE
+		Status previous_status = 9;
+		Status new_status = 10;
+
+		//COMMENT
+		string comment = 11;
+		
+		// ATTACHED FILE ID
+		string attached = 12;
+	}
+
+	enum ActionType {
+		STATUS_CHANGE = 0;
+		COMMENT = 1;
+		ATTACHED_FILE = 2;
+	}
+
+	bool unread = 31;
+	int32 trip_start_time_relative_secs = 32;
+  string android_id = 33;
+}

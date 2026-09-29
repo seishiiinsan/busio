@@ -1,0 +1,98 @@
+# Projet Xcode généré par XcodeGen : `make project` (brew install xcodegen).
+name: Busio
+
+options:
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: fr
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    DEAD_CODE_STRIPPING: YES
+
+packages:
+  BusioKit:
+    path: BusioKit
+
+targets:
+  Busio:
+    type: application
+    platform: iOS
+    sources:
+      - path: Busio
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+          - "Resources/Seed"
+          - "Resources/Seed/**"
+      - path: Busio/Resources/Seed
+        type: folder
+        buildPhase: resources
+      - path: Shared
+    dependencies:
+      - package: BusioKit
+      - target: BusioWidgets
+    settings:
+      base:
+        PRODUCT_NAME: Busio
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUSIO_BUNDLE_ID)
+        INFOPLIST_FILE: Busio/Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Busio
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.navigation
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Busio utilise ta position pour trouver les arrêts proches, calculer la marche jusqu'à ton bus et, pendant un trajet suivi, savoir quand tu es dans le bus pour te prévenir avant ta descente."
+        CODE_SIGN_ENTITLEMENTS: Busio/Busio.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+  BusioWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: BusioWidgets
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+      - path: Shared
+    dependencies:
+      - package: BusioKit
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_NAME: BusioWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUSIO_BUNDLE_ID).widgets
+        INFOPLIST_FILE: BusioWidgets/Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Busio
+        CODE_SIGN_ENTITLEMENTS: BusioWidgets/BusioWidgets.entitlements
+        SKIP_INSTALL: YES
+
+schemes:
+  Busio:
+    build:
+      targets:
+        Busio: all
+    run:
+      config: Debug
+    archive:
+      config: Release

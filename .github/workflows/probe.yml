@@ -1,0 +1,31 @@
+name: Probe data sources
+
+# Vérifie chaque matin que l'API Zenbus et le GTFS répondent toujours au format attendu.
+# En cas d'échec, GitHub envoie un e-mail : l'app a peut-être besoin d'une mise à jour.
+on:
+  schedule:
+    - cron: "17 5 * * 1-5"
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["Tools/Probe/**", ".github/workflows/probe.yml"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Tools/Probe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm init -y >/dev/null && npm install protobufjs@7 --silent
+      - run: node probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-out
+          path: Tools/Probe/probe-out

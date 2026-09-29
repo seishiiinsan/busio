@@ -1,0 +1,81 @@
+name: Screenshots
+
+# Lance l'app dans le simulateur avec les vraies données et enregistre des captures
+# dans docs/screenshots (déclenché à la main ou par « [shots] » dans le message de commit).
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[shots]')
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Réseau Zenbus
+        continue-on-error: true
+        run: curl -sS -o /dev/null -w "HTTP %{http_code} · %{time_total}s\n" "https://zenbus.net/publicapp/static-data?alias=castres"
+
+      - name: Simulateur
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          phones=[x for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone')]
+          pref=[x for x in phones if x['name'] in ('iPhone 17 Pro','iPhone 16 Pro','iPhone 17')]
+          print((pref or phones)[-1]['udid'])")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices | grep "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build -project Busio.xcodeproj -scheme Busio -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/DD \
+            -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO 2>&1 | grep -E "error:|\*\* BUILD" || true
+          test -d build/DD/Build/Products/Debug-iphonesimulator/Busio.app
+
+      - name: Captures
+        run: |
+          UDID=${{ steps.sim.outputs.udid }}
+          APP=build/DD/Build/Products/Debug-iphonesimulator/Busio.app
+          BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl privacy "$UDID" grant location "$BID" || true
+          xcrun simctl location "$UDID" set 43.6006,2.2402 || true
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+          mkdir -p docs/screenshots
+          shoot() {
+            xcrun simctl launch --terminate-running-process "$UDID" "$BID" -demo -tab "$1" -screen "${4:-none}"
+            sleep "${3:-18}"
+            xcrun simctl io "$UDID" screenshot "docs/screenshots/$2.png"
+          }
+          rm -f docs/screenshots/*.png
+          shoot planner itineraire 25
+          shoot planner itineraire-resultats 30 results
+          shoot planner itineraire-detail 30 detail
+          shoot planner itineraire-phrase 30 phrase
+          shoot planner trajet-suivi 40 followed
+          shoot map carte
+          shoot lines ligne-10 20 line
+          shoot search arret-gare-sncf 20 stop
+          xcrun simctl ui "$UDID" appearance dark
+          shoot planner itineraire-sombre 30 results
+          ls -la docs/screenshots
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          git diff --cached --quiet || git commit -m "docs: update screenshots"
+          git push origin "HEAD:${GITHUB_REF_NAME}" || echo "push ignoré"

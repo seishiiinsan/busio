@@ -1,0 +1,39 @@
+name: Refresh seed data
+
+# Télécharge un instantané des données Libellus (Zenbus + GTFS data.gouv)
+# embarqué dans l'app (1er lancement hors-ligne) et utilisé par les tests.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/seed-data.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          set -euo pipefail
+          SEED=Busio/Resources/Seed
+          FIX=BusioKit/Tests/BusioKitTests/Fixtures
+          mkdir -p "$SEED" "$FIX"
+          curl -fsS --retry 3 -o "$SEED/zenbus-static.bin" "https://zenbus.net/publicapp/static-data?alias=castres"
+          curl -fsSL --retry 3 -o "$SEED/gtfs.zip" "https://www.data.gouv.fr/fr/datasets/r/70c9f936-129e-41f4-940a-8e6f272535d1"
+          curl -fsS --retry 3 -o "$FIX/poll-l10-castres-mazamet.bin" "https://zenbus.net/publicapp/poll?alias=castres&itinerary=4877917310943232"
+          curl -fsS --retry 3 -o "$FIX/poll-l10-mazamet-castres.bin" "https://zenbus.net/publicapp/poll?alias=castres&itinerary=6341470828101632"
+          curl -fsS --retry 3 -o "$FIX/poll-l1-chartreuse-gare.bin" "https://zenbus.net/publicapp/poll?alias=castres&itinerary=5103463612547072"
+          unzip -tq "$SEED/gtfs.zip"
+          ls -la "$SEED" "$FIX"
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Busio/Resources/Seed BusioKit/Tests/BusioKitTests/Fixtures
+          git diff --cached --quiet || git commit -m "chore: refresh seed data"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

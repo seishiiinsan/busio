@@ -1,0 +1,10 @@
+// Réglages communs à toutes les cibles.
+// Pour signer avec ton Apple ID : copie Local.xcconfig.example en Local.xcconfig.
+
+BUSIO_BUNDLE_PREFIX = fr.seishiiinsan
+DEVELOPMENT_TEAM =
+
+BUSIO_BUNDLE_ID = $(BUSIO_BUNDLE_PREFIX).busio
+BUSIO_APP_GROUP = group.$(BUSIO_BUNDLE_ID)
+
+#include? "Local.xcconfig"

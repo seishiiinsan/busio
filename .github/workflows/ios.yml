@@ -1,0 +1,75 @@
+name: iOS
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    paths-ignore: ["**.md", "Tools/Probe/**", ".github/workflows/probe.yml", ".github/workflows/seed-data.yml"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+          swift --version
+
+      - name: Tests du moteur (BusioKit)
+        working-directory: BusioKit
+        run: swift test 2>&1 | tail -40
+
+      - name: Projet à jour
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen generate
+          git diff --stat -- Busio.xcodeproj || true
+
+      - name: Build app + widgets (simulateur, sans signature)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild build \
+            -project Busio.xcodeproj -scheme Busio -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build/xcodebuild.log | grep -E "error:|warning: .*Busio|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild.log
+
+      - name: Erreurs de compilation
+        if: failure()
+        run: grep -E "error:" build/xcodebuild.log | sort -u | head -100 || true
+
+      - name: Commit du projet régénéré sur macOS
+        if: success() && github.event_name == 'push'
+        run: |
+          if ! git diff --quiet -- Busio.xcodeproj; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Busio.xcodeproj
+            git commit -m "build: regenerate Xcode project"
+            git push origin "HEAD:${GITHUB_REF_NAME}" || echo "push ignoré (branche avancée)"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xcodebuild-log
+          path: build/xcodebuild.log
+          if-no-files-found: ignore

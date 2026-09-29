@@ -44,7 +44,7 @@ struct CommuteProvider: AppIntentTimelineProvider {
         }
         // Données fraîches si possible (temps réel), sinon dernier état enregistré par l'app.
         var snapshot = AppGroup.store.loadSnapshot(direction)
-        if let fresh = try? await CommuteRefresher.refresh(direction: direction, options: [], now: now) {
+        if let fresh = try? await CommuteRefresher.refresh(direction: direction, options: [.updateAlerts], now: now) {
             snapshot = fresh
         }
 
@@ -57,7 +57,12 @@ struct CommuteProvider: AppIntentTimelineProvider {
 
         let preferences = AppGroup.store.loadPreferences()
         let inCommuteWindow = preferences.commute.isWorkday(now) && isNearCommute(now, settings: preferences.commute)
-        let refresh = now.addingTimeInterval(inCommuteWindow ? 5 * 60 : 30 * 60)
+        var refresh = now.addingTimeInterval(inCommuteWindow ? 5 * 60 : 30 * 60)
+        // Sens automatique : recalcule dès la bascule aller → retour.
+        let switchTime = CommuteSettings.date(minute: preferences.commute.switchMinute, on: now)
+        if configuration.direction == .automatic, switchTime > now, switchTime < refresh {
+            refresh = switchTime.addingTimeInterval(1)
+        }
         return Timeline(entries: entries, policy: .after(refresh))
     }
 

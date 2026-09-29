@@ -12,6 +12,12 @@ App iPhone perso pour le réseau de bus **Libellus** (Castres-Mazamet) : les mê
 
 SwiftUI iOS 26 (Liquid Glass), Swift 6, aucune dépendance serveur.
 
+| Trajet | Carte | Ligne | Arrêt |
+| --- | --- | --- | --- |
+| ![Trajet](docs/screenshots/trajet.png) | ![Carte](docs/screenshots/carte.png) | ![Ligne 10](docs/screenshots/ligne-10.png) | ![Gare SNCF](docs/screenshots/arret-gare-sncf.png) |
+
+*Captures générées automatiquement dans le simulateur avec les vraies données (workflow **Screenshots**).*
+
 ## Fiabilité des données
 
 Busio ne doit jamais afficher un horaire faux sans le dire. Chaque horaire porte son niveau de confiance : **En direct** (bus suivi par GPS), **Estimé**, **Prévu** (grille Zenbus du jour) ou **Théorique** (horaires publiés).
@@ -46,7 +52,7 @@ Prérequis : un Mac avec **Xcode 26** ou plus récent, ton iPhone et un câble.
 4. Branche l'iPhone, active le **Mode développeur** (Réglages › Confidentialité et sécurité), choisis l'iPhone comme destination puis **Run** (⌘R).
 5. Au premier lancement : Réglages › Général › VPN et gestion de l'appareil › fais confiance à ton Apple ID.
 
-Avec un Apple ID gratuit, l'app **expire au bout de 7 jours** : rebranche l'iPhone et relance **Run** pour la renouveler (tes réglages sont conservés).
+Avec un Apple ID gratuit, l'app **expire au bout de 7 jours** : rebranche l'iPhone et relance **Run** pour la renouveler (tes réglages sont conservés). Un compte gratuit gère un seul App Group par app (Busio n'en utilise qu'un) et 10 identifiants d'app par semaine (Busio en utilise 2 : l'app et ses widgets).
 
 ### Live Activity automatique chaque matin
 

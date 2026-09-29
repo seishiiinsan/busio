@@ -18,15 +18,23 @@ final class CommuteModel {
         direction = preferences.commute.direction(at: Date())
     }
 
+    @ObservationIgnored private var manualSince: Date?
+
     func select(_ direction: CommuteDirection) {
         guard direction != self.direction else { return }
         self.direction = direction
         isManualDirection = true
+        manualSince = Date()
         snapshot = AppGroup.store.loadSnapshot(direction)
     }
 
     /// Resynchronise le sens automatique (ex. au retour au premier plan).
+    /// Un choix manuel est oublié au bout d'une heure.
     func syncDirection(with preferences: UserPreferences, now: Date = Date()) {
+        if isManualDirection, let manualSince, now.timeIntervalSince(manualSince) > 3600 {
+            isManualDirection = false
+            self.manualSince = nil
+        }
         guard !isManualDirection else { return }
         let automatic = preferences.commute.direction(at: now)
         if automatic != direction {

@@ -17,16 +17,20 @@ enum CommuteAlerts {
         let center = UNUserNotificationCenter.current()
         guard await center.notificationSettings().authorizationStatus == .authorized else { return }
 
+        // Un rappel par sens : l'aller et le retour cohabitent.
+        let leaveID = "\(Self.leaveID).\(snapshot.direction.rawValue)"
+        let headsUpID = "\(Self.headsUpID).\(snapshot.direction.rawValue)"
         center.removePendingNotificationRequests(withIdentifiers: [leaveID, headsUpID])
         let upcoming = snapshot.upcoming(at: now)
         let target = upcoming.first { $0.id == snapshot.recommendedID } ?? upcoming.first { !$0.isCancelled }
 
-        if preferences.leaveNowAlerts, preferences.commute.isWorkday(now), let journey = target {
+        if preferences.leaveNowAlerts, preferences.commute.isWorkday(now), let journey = target, !journey.isCancelled,
+           ServiceDay(containing: journey.departureTime) == ServiceDay(containing: now) {
             let advice = LeaveAdvice(journey: journey, walk: snapshot.walk, buffer: snapshot.buffer)
             let line = snapshot.style(for: journey.lineID)?.badge ?? ""
             let walkMinutes = Int((snapshot.walk / 60).rounded())
-            // Ne prévient pas plus de 90 min à l'avance (les horaires évoluent).
-            if advice.leaveAt > now, advice.leaveAt.timeIntervalSince(now) < 90 * 60 {
+            // Programmé dès que l'horaire est connu, puis recalé à chaque actualisation (retards compris).
+            if advice.leaveAt > now, advice.leaveAt.timeIntervalSince(now) < 14 * 3600 {
                 let content = UNMutableNotificationContent()
                 content.title = "Pars maintenant"
                 content.body = "Bus \(line) à \(TimeText.clock(journey.departureTime)) depuis \(snapshot.originName) · \(walkMinutes) min à pied."

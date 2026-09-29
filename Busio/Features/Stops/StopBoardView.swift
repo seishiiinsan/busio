@@ -109,10 +109,14 @@ private struct StopHeader: View {
                 ForEach(area.lineIDs, id: \.self) { LineBadge(line: app.network?.line($0), size: .small) }
                 Spacer(minLength: 8)
                 if let walk {
-                    Label(TimeText.duration(walk), systemImage: "figure.walk")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize()
+                    HStack(spacing: 3) {
+                        Image(systemName: "figure.walk")
+                        Text(TimeText.duration(walk))
+                    }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+                    .accessibilityLabel("\(TimeText.duration(walk)) à pied")
                 }
             }
             .padding(.horizontal, 6)
